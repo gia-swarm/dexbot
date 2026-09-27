@@ -1,0 +1,5 @@
+node_modules/
+.deployment/
+.wrangler/
+dist/
+.env*
