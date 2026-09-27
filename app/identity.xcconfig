@@ -8,6 +8,11 @@
 DEXBOT_APP_NAME = DexBot
 DEXBOT_ANDROID_APPLICATION_ID = com.dexbot.app
 DEXBOT_APPLE_BUNDLE_ID = com.dexbot.app
+// The custom URL scheme the iOS and macOS apps register for the browser's
+// sign-in and Connect returns. lib/brand.dart names it as `nativeScheme`, the
+// Android debug manifest registers `<scheme>-dev`, and the server brand's
+// `nativeScheme` must say the same.
+DEXBOT_URL_SCHEME = dexbot
 // The deployment's host, for iOS and macOS Universal Links. Android takes its
 // App Link host from `--dart-define=FROCKBOT_ORIGIN` instead.
 DEXBOT_LINK_HOST = dexbot.invalid

@@ -396,8 +396,8 @@ packages:
     dependency: "direct main"
     description:
       path: "apps/native/packages/frockbot_client"
-      ref: dc23687746c67b81330029dfffef789a38e26386
-      resolved-ref: dc23687746c67b81330029dfffef789a38e26386
+      ref: ec6532b0cd2ea6462deb52832e03d3bb19c95130
+      resolved-ref: ec6532b0cd2ea6462deb52832e03d3bb19c95130
       url: "https://github.com/timoconnellaus/frockbot.git"
     source: git
     version: "0.0.0"
@@ -1114,8 +1114,8 @@ packages:
     dependency: "direct overridden"
     description:
       path: "apps/native/vendor/webview_flutter_wkwebview"
-      ref: dc23687746c67b81330029dfffef789a38e26386
-      resolved-ref: dc23687746c67b81330029dfffef789a38e26386
+      ref: ec6532b0cd2ea6462deb52832e03d3bb19c95130
+      resolved-ref: ec6532b0cd2ea6462deb52832e03d3bb19c95130
       url: "https://github.com/timoconnellaus/frockbot.git"
     source: git
     version: "3.26.1"

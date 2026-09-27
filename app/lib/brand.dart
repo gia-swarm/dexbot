@@ -15,6 +15,23 @@ const dexbotBrand = ClientBrand(
   builtInModelName: 'Dex AI',
   signInIcon: AssetImage('assets/branding/icon.png'),
   defaultCharacterId: 'dex',
+  // The custom URL scheme the Mac and iPhone projects register for the
+  // browser's sign-in and Connect returns, from `identity.xcconfig`'s
+  // `DEXBOT_URL_SCHEME`; the Android debug manifest registers `dexbot-dev`.
+  // The server brand's `nativeScheme` must name the same one.
+  // test/app_test.dart fails if any of them disagree.
+  nativeScheme: 'dexbot',
+  // No `signInProvider`: DexBot signs in through Privy, whose own page offers
+  // the ways in, so the sign-in page says only "sign in".
+
+  // A placeholder teal until DexBot has a palette. White type sits on `ink`
+  // and `paper`, so each keeps 4.5:1 against white.
+  accent: ClientAccent(
+    ink: Color(0xff0f7a5a),
+    paper: Color(0xff0c6b4f),
+    soft: Color(0xff8ff0c6),
+    deep: Color(0xff064d38),
+  ),
   // No release channel: a plain build, whose updaters stay inert. DexBot has
   // no Shorebird app and no Sparkle feed.
   characters: [
@@ -34,10 +51,8 @@ const dexbotBrand = ClientBrand(
         width: 371,
         height: 437,
       ),
-      // `ClientBrand` requires a Rive file, and Dex has none yet. No file is
-      // bundled under this key: the client's load of it fails and it draws
-      // the still in its place, as it does wherever Rive is unavailable.
-      rive: 'assets/characters/dex.riv',
+      // No Rive file: Dex is its still everywhere, and the client never
+      // loads the Rive runtime for a brand whose characters are all stills.
       still: 'assets/characters/dex.png',
       voice: 'Kore',
     ),

@@ -7,7 +7,7 @@ import app_links
 class AppDelegate: FlutterAppDelegate {
   /// The copy of this app that was already running when this process started.
   ///
-  /// Launch Services opens a `frockbot://` link with whichever bundle it last
+  /// Launch Services opens a `dexbot://` link with whichever bundle it last
   /// registered for the scheme. That is not always the one running: a release
   /// build left in `build/` beside the installed app, or a debug build under
   /// `flutter run`, carries the same identifier and scheme. Opened that way,

@@ -10,9 +10,9 @@ PRODUCT_NAME = $(DEXBOT_APP_NAME)
 PRODUCT_BUNDLE_IDENTIFIER = $(DEXBOT_APPLE_BUNDLE_ID)
 
 // The custom scheme the browser's sign-in and Connect returns hand over on
-// (Info.plist). `frockbot_client` names this scheme itself (`macosSchemeV1`), so
-// it is not DexBot's to change until the client reads it from the brand.
-FROCKBOT_URL_SCHEME = frockbot
+// (Info.plist): DexBot's own, from `identity.xcconfig`, which the brand names
+// too (`nativeScheme`).
+FROCKBOT_URL_SCHEME = $(DEXBOT_URL_SCHEME)
 
 // The asset catalog app icon (selected in the Runner target's build settings).
 FROCKBOT_APP_ICON = AppIcon

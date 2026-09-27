@@ -6,8 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frockbot_client/app.dart';
+import 'package:frockbot_client/auth/sign_in_page.dart';
 import 'package:frockbot_client/brand.dart';
+import 'package:frockbot_client/client/auth_io.dart';
 import 'package:frockbot_client/client/transport.dart';
+import 'package:frockbot_client/flock/avatar.dart';
+import 'package:frockbot_client/theme/document.dart';
+import 'package:frockbot_client/theme/frock_theme.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
@@ -56,6 +61,26 @@ Map<String, String> identity() => {
       text.split('=').first.trim(): text.split('=').last.trim(),
 };
 
+/// The sign-in page on its own, first offering sign-in, then waiting on the
+/// browser.
+Widget signIn({bool awaitingBrowser = false}) => MaterialApp(
+  theme: FrockTheme.theme(Brightness.dark),
+  home: SignInPage(
+    busy: false,
+    awaitingBrowser: awaitingBrowser,
+    error: null,
+    onSignIn: () {},
+  ),
+);
+
+/// No text or semantics label on screen names FrockBot or Google.
+void namesNeitherFrockBotNorGoogle() {
+  for (final word in const ['FrockBot', 'Frock', 'Google']) {
+    expect(find.textContaining(word), findsNothing, reason: word);
+    expect(find.bySemanticsLabel(RegExp(word)), findsNothing, reason: word);
+  }
+}
+
 void main() {
   setUp(() => installClientBrand(dexbotBrand));
 
@@ -78,9 +103,71 @@ void main() {
     expect(find.text('DexBot'), findsOneWidget);
     expect(find.textContaining('Couldn’t reach DexBot'), findsOneWidget);
     expect(images(tester), {'assets/branding/icon.png'});
-    expect(find.textContaining('FrockBot'), findsNothing);
-    expect(find.textContaining('Frock'), findsNothing);
-    expect(find.bySemanticsLabel(RegExp('Frock')), findsNothing);
+    namesNeitherFrockBotNorGoogle();
+  });
+
+  testWidgets('sign-in names no provider', (tester) async {
+    expect(dexbotBrand.signInProvider, isNull);
+
+    await tester.pumpWidget(signIn());
+    expect(find.text('Continue to sign in'), findsOneWidget);
+    expect(find.textContaining('Secure sign-in.'), findsOneWidget);
+    namesNeitherFrockBotNorGoogle();
+
+    await tester.pumpWidget(signIn(awaitingBrowser: true));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Complete sign-in, then'), findsOneWidget);
+    namesNeitherFrockBotNorGoogle();
+  });
+
+  testWidgets('Dex is still-only and drawn as its still', (tester) async {
+    final dex = dexbotBrand.characters.single;
+    expect(dex.rive, isNull);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: FrockTheme.theme(Brightness.dark),
+        home: const Scaffold(body: CharacterAvatar(characterId: 'dex')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(images(tester), {dex.still});
+  });
+
+  test('the accent is DexBot’s and stays readable', () {
+    final accent = dexbotBrand.accent;
+    expect(inkTokens.surfaces.accent, accent.ink);
+    expect(paperTokens.surfaces.accent, accent.paper);
+    expect(FrockTheme.theme(Brightness.dark).colorScheme.primary, accent.ink);
+    expect(FrockTheme.accentSoft, accent.soft);
+    expect(FrockTheme.accentDeep, accent.deep);
+    for (final tokens in [inkTokens, paperTokens, studioTokens]) {
+      expect(tokensMeetContrastFloor(tokens), isTrue);
+    }
+  });
+
+  test('every platform registers the scheme the brand names', () {
+    final scheme = dexbotBrand.nativeScheme;
+    expect(scheme, 'dexbot');
+    expect(identity()['DEXBOT_URL_SCHEME'], scheme);
+    for (final path in const [
+      'ios/Runner/Configs/AppInfo.xcconfig',
+      'macos/Runner/Configs/AppInfo.xcconfig',
+    ]) {
+      expect(
+        File(path).readAsStringSync(),
+        contains('FROCKBOT_URL_SCHEME = \$(DEXBOT_URL_SCHEME)\n'),
+        reason: path,
+      );
+    }
+    expect(
+      File('android/app/src/debug/AndroidManifest.xml').readAsStringSync(),
+      contains('android:scheme="$scheme-dev"'),
+    );
+    expect(NativeSignIn.iosScheme, scheme);
+    expect(NativeSignIn.macosScheme, scheme);
   });
 
   test('the brand is a plain build with its own cast', () {

@@ -6,7 +6,8 @@
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- A debug build talks to the local stack over plain HTTP, and its
-         sign-in comes back on the development scheme rather than the
+         sign-in comes back on the development scheme (the brand's
+         `nativeScheme` with `-dev`) rather than the
          production App Link. Neither reaches a release build: this manifest
          is merged into debug builds only. -->
     <application
@@ -17,7 +18,7 @@
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="frockbot-dev" android:host="native" android:path="/return/android"/>
+                <data android:scheme="dexbot-dev" android:host="native" android:path="/return/android"/>
             </intent-filter>
         </activity>
     </application>

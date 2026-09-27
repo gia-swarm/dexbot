@@ -17,7 +17,7 @@ dependencies:
   # release tag; FrockBot has not tagged a release that carries the package
   # yet (it landed in timoconnellaus/frockbot#910), so this pins the commit of
   # FrockBot's `main` this app was built and tested against:
-  #   dc23687746c67b81330029dfffef789a38e26386 (2026-09-27)
+  #   ec6532b0cd2ea6462deb52832e03d3bb19c95130 (2026-09-28, timoconnellaus/frockbot#919)
   # A full SHA rather than `main` so a FrockBot merge never changes DexBot's
   # build unseen. Move it to a release tag once one exists, and move the
   # override below with it.
@@ -25,7 +25,7 @@ dependencies:
     git:
       url: https://github.com/timoconnellaus/frockbot.git
       path: apps/native/packages/frockbot_client
-      ref: dc23687746c67b81330029dfffef789a38e26386
+      ref: ec6532b0cd2ea6462deb52832e03d3bb19c95130
 
 dev_dependencies:
   flutter_test:
@@ -48,4 +48,4 @@ dependency_overrides:
     git:
       url: https://github.com/timoconnellaus/frockbot.git
       path: apps/native/vendor/webview_flutter_wkwebview
-      ref: dc23687746c67b81330029dfffef789a38e26386
+      ref: ec6532b0cd2ea6462deb52832e03d3bb19c95130

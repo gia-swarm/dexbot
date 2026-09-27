@@ -6,12 +6,16 @@ DexBot's Flutter application: FrockBot's client package, `frockbot_client`, run 
 
 | File | Holds |
 | --- | --- |
-| `lib/brand.dart` | The `ClientBrand`: product name, built-in model name, sign-in icon, the character catalog and default character. No release channel, so the updaters stay inert. |
-| `identity.xcconfig` | Android application id, Apple bundle id, the name under the launcher icon, and the Universal Links host. Xcode includes it from `ios/` and `macos/`; Gradle reads the same keys. |
+| `lib/brand.dart` | The `ClientBrand`: product name, built-in model name, sign-in icon, the native URL scheme (`dexbot`), the accent, the character catalog and default character. No sign-in provider, so the sign-in page's wording is neutral, and no release channel, so the updaters stay inert. |
+| `identity.xcconfig` | Android application id, Apple bundle id, the name under the launcher icon, the sign-in return scheme the Apple apps register, and the Universal Links host. Xcode includes it from `ios/` and `macos/`; Gradle reads the same keys. |
 | `assets/` | The character still and the sign-in icon, drawn by `tool/placeholder_art.py`, which also writes every platform's app icon. |
 | `android/`, `ios/`, `macos/`, `web/` | The platform projects, carried over from FrockBot's `apps/native` with DexBot's identity and without Shorebird, Sparkle's feed, Firebase registrations or FrockBot's Apple team. |
 
-Every name, id and picture here is a **placeholder**. To rename the product, edit `lib/brand.dart`, `identity.xcconfig`, and the name in `web/manifest.json` and `web/index.html`; `flutter test` fails if they disagree.
+Every name, id, colour and picture here is a **placeholder**. To rename the product, edit `lib/brand.dart`, `identity.xcconfig`, and the name in `web/manifest.json` and `web/index.html`; `flutter test` fails if they disagree.
+
+## The sign-in return scheme
+
+A browser sign-in or Connect comes back to the iOS and macOS apps on a custom URL scheme, and to an Android debug build on `<scheme>-dev`. DexBot's is `dexbot`, and four places must agree on it: the brand's `nativeScheme` (`lib/brand.dart`), `DEXBOT_URL_SCHEME` in `identity.xcconfig` (which both Apple projects register), `android:scheme="dexbot-dev"` in `android/app/src/debug/AndroidManifest.xml`, and the server brand's `nativeScheme`, which DexBot's deployment must set to `"dexbot"`. `flutter test` checks the first three.
 
 ## The pin
 
@@ -49,7 +53,8 @@ A standalone web build asks for the engine's fallback fonts under `fallback-font
 
 ## Not yet DexBot's
 
-- **Art.** Dex is a generated placeholder with no Rive file. `ClientBrand` requires one, so `dex.riv` is named but not bundled: the client's load fails and it draws the still, as it does wherever Rive is unavailable.
+- **Art.** Dex is a generated placeholder still with no Rive file, so the client draws the still everywhere and never loads the Rive runtime. The accent is a placeholder teal.
 - **Push.** There is no DexBot Firebase project. Without `android/app/google-services.json` or `ios/Runner/GoogleService-Info.plist` the app builds and runs with push off.
 - **Signing.** Android release builds use the debug key, and the Apple projects name no team.
-- **What the client still writes.** It fixes the iOS and macOS sign-in return scheme as `frockbot://` and the Android debug scheme as `frockbot-dev://`, and its native method channels are named `com.frockbot/…`, so the platform projects keep those. None is shown to a person, but a Mac with both FrockBot and DexBot installed would send one app's sign-in return to the other. What's New, the accent colour and the sign-in page's provider line are not in `ClientBrand` either.
+- **Development Apple builds.** FrockBot's Mac and iPhone projects can build a separate development app on `<scheme>-dev`. DexBot's projects carry no such variant, so a DexBot build with `FROCKBOT_IOS_DEV` or `FROCKBOT_DESKTOP_DEV` set would expect `dexbot-dev` returns that nothing registers.
+- **What the client still writes.** Its native method channels are named `com.frockbot/…`, so the platform projects keep those; they are internal and never shown. What's New is not in `ClientBrand`: the feed comes from the server, so turning it off is DexBot's server brand's `whatsNew: false`.
