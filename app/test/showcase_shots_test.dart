@@ -53,6 +53,7 @@ Future<void> _loadFonts() async {
 
 typedef _Bot = ({
   String id,
+  String character,
   String name,
   String primary,
   String when,
@@ -63,6 +64,7 @@ typedef _Bot = ({
 const List<_Bot> _bots = [
   (
     id: 'dex',
+    character: 'dex',
     name: 'Dex',
     primary: '#4d9edc',
     when: '2026-09-28T09:40:30.000Z',
@@ -71,6 +73,7 @@ const List<_Bot> _bots = [
   ),
   (
     id: 'ranges',
+    character: 'kai',
     name: 'Range Scout',
     primary: '#e245a5',
     when: '2026-09-27T23:12:00.000Z',
@@ -79,6 +82,7 @@ const List<_Bot> _bots = [
   ),
   (
     id: 'vaults',
+    character: 'juno',
     name: 'Vault Watch',
     primary: '#0eb873',
     when: '2026-09-28T08:05:00.000Z',
@@ -87,6 +91,7 @@ const List<_Bot> _bots = [
   ),
   (
     id: 'harvest',
+    character: 'leo',
     name: 'Harvest Log',
     primary: '#e9af19',
     when: '2026-09-27T22:00:00.000Z',
@@ -227,7 +232,7 @@ class _ScriptedServer extends NativeApi {
                 'initialName': bot.name,
                 'avatar': {
                   'schemaVersion': 1,
-                  'characterId': 'dex',
+                  'characterId': bot.character,
                   'primary': bot.primary,
                 },
               },

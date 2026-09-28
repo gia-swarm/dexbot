@@ -120,20 +120,21 @@ void main() {
     namesNeitherFrockBotNorGoogle();
   });
 
-  testWidgets('Dex is still-only and drawn as its still', (tester) async {
-    final dex = dexbotBrand.characters.single;
-    expect(dex.rive, isNull);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: FrockTheme.theme(Brightness.dark),
-        home: const Scaffold(body: CharacterAvatar(characterId: 'dex')),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(tester.takeException(), isNull);
-    expect(images(tester), {dex.still});
+  testWidgets('every character is still-only and drawn as its still', (
+    tester,
+  ) async {
+    for (final character in dexbotBrand.characters) {
+      expect(character.rive, isNull);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: FrockTheme.theme(Brightness.dark),
+          home: Scaffold(body: CharacterAvatar(characterId: character.id)),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(images(tester), {character.still});
+    }
   });
 
   test('the accent is DexBot’s and stays readable', () {
@@ -172,8 +173,11 @@ void main() {
 
   test('the brand is a plain build with its own cast', () {
     expect(dexbotBrand.releaseChannel, isNull);
-    expect(characterCatalogV1.keys, ['dex']);
+    expect(characterCatalogV1.keys, [
+      for (final character in dexbotBrand.characters) character.id,
+    ]);
     expect(defaultCharacterIdV1, 'dex');
+    expect(File('assets/characters/CREDITS.md').existsSync(), isTrue);
     for (final character in dexbotBrand.characters) {
       expect(File(character.still).existsSync(), isTrue);
       expect(character.still, startsWith('assets/'));

@@ -1,8 +1,7 @@
-"""Draws DexBot's placeholder art: the one character's still and every app icon.
+"""Draws DexBot's placeholder app icons, until real art exists.
 
-Placeholder only, until real art exists. Re-run from `app/` after changing a
-colour: `python3 tool/placeholder_art.py` (needs Pillow). It prints the still's
-ink box, which `lib/brand.dart` must match.
+Re-run from `app/` after changing a colour: `python3 tool/placeholder_art.py`
+(needs Pillow). The characters are `tool/characters.py`'s.
 """
 from PIL import Image, ImageDraw
 
@@ -40,15 +39,6 @@ def dex(size, canvas):
     d.ellipse([cx - cr, cy - cr, cx + cr, cy + cr], fill=PRIMARY)
 
 
-def still(path, size=(457, 615)):
-    big = Image.new("RGBA", (size[0] * SCALE, size[1] * SCALE), (0, 0, 0, 0))
-    dex(size, big)
-    image = big.resize(size, Image.LANCZOS)
-    image.save(path, optimize=True)
-    left, top, right, bottom = image.getchannel("A").getbbox()
-    print(f"{path}: canvas {size[0]}x{size[1]}, ink left {left} top {top} width {right - left} height {bottom - top}")
-
-
 def icon(path, px, backdrop=True, alpha=True, pad=0.0):
     side = px * SCALE
     big = Image.new("RGBA", (side, side), BACKDROP + (255,) if backdrop else (0, 0, 0, 0))
@@ -63,7 +53,6 @@ def icon(path, px, backdrop=True, alpha=True, pad=0.0):
     image.save(path, optimize=True)
 
 
-still("assets/characters/dex.png")
 icon("assets/branding/icon.png", 512)
 
 for folder, px in {"mdpi": 48, "hdpi": 72, "xhdpi": 96, "xxhdpi": 144, "xxxhdpi": 192}.items():

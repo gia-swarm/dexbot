@@ -3,7 +3,7 @@
 /// written here, so renaming the product is an edit to this file and to
 /// `identity.xcconfig`, which holds the platform ids and launcher label.
 ///
-/// The icon and the one character are placeholders until real art exists.
+/// The app icon is a placeholder until real art exists.
 library;
 
 import 'package:flutter/painting.dart';
@@ -35,27 +35,99 @@ const dexbotBrand = ClientBrand(
   ),
   // No release channel: a plain build, whose updaters stay inert. DexBot has
   // no Shorebird app and no Sparkle feed.
+  // DiceBear "Personas" by Draftbit (CC BY 4.0, credited in
+  // assets/characters/CREDITS.md) on DiceBear's "Bold Pop" backgrounds, cut
+  // round. `tool/characters.py` makes the stills and prints this list.
   characters: [
-    // Placeholder art drawn by `tool/placeholder_art.py`, which prints the
-    // ink box below.
     CharacterDefinition(
       'dex',
       'Dex',
-      Color(0xff3ddc97),
-      Color(0xff1f9e67),
-      Color(0xfff0fff8),
-      ink: CharacterInk(
-        canvasWidth: 457,
-        canvasHeight: 615,
-        left: 43,
-        top: 95,
-        width: 371,
-        height: 437,
-      ),
-      // No Rive file: Dex is its still everywhere, and the client never
-      // loads the Rive runtime for a brand whose characters are all stills.
+      Color(0xff4d96ff),
+      Color(0xff376cb7),
+      Color(0xffffffff),
+      ink: _round,
       still: 'assets/characters/dex.png',
       voice: 'Kore',
     ),
+    CharacterDefinition(
+      'ivy',
+      'Ivy',
+      Color(0xff4d96ff),
+      Color(0xff376cb7),
+      Color(0xffffffff),
+      ink: _round,
+      still: 'assets/characters/ivy.png',
+      voice: 'Aoede',
+    ),
+    CharacterDefinition(
+      'kai',
+      'Kai',
+      Color(0xffff5d8f),
+      Color(0xffb74266),
+      Color(0xffffffff),
+      ink: _round,
+      still: 'assets/characters/kai.png',
+      voice: 'Puck',
+    ),
+    CharacterDefinition(
+      'eli',
+      'Eli',
+      Color(0xffb57bff),
+      Color(0xff8258b7),
+      Color(0xffffffff),
+      ink: _round,
+      still: 'assets/characters/eli.png',
+      voice: 'Fenrir',
+    ),
+    CharacterDefinition(
+      'gia',
+      'Gia',
+      Color(0xffb57bff),
+      Color(0xff8258b7),
+      Color(0xffffffff),
+      ink: _round,
+      still: 'assets/characters/gia.png',
+      voice: 'Leda',
+    ),
+    CharacterDefinition(
+      'nova',
+      'Nova',
+      Color(0xffffb703),
+      Color(0xffb78302),
+      Color(0xffffffff),
+      ink: _round,
+      still: 'assets/characters/nova.png',
+      voice: 'Zephyr',
+    ),
+    CharacterDefinition(
+      'leo',
+      'Leo',
+      Color(0xffffb703),
+      Color(0xffb78302),
+      Color(0xffffffff),
+      ink: _round,
+      still: 'assets/characters/leo.png',
+      voice: 'Charon',
+    ),
+    CharacterDefinition(
+      'juno',
+      'Juno',
+      Color(0xff43aa8b),
+      Color(0xff307a64),
+      Color(0xffffffff),
+      ink: _round,
+      still: 'assets/characters/juno.png',
+      voice: 'Orus',
+    ),
   ],
+);
+
+/// Every still is a 512 px circle that fills its canvas.
+const _round = CharacterInk(
+  canvasWidth: 512,
+  canvasHeight: 512,
+  left: 0,
+  top: 0,
+  width: 512,
+  height: 512,
 );
