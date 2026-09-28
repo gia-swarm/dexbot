@@ -1,5 +1,5 @@
 /**
- * Sign-in as DexBot does it: Privy email login, and nothing stored anywhere.
+ * Sign-in as DexBot does it: Discord through Privy, and nothing stored anywhere.
  *
  * FrockBot's auth contract (`AuthPackageV1`, ADR 0038 §3) implemented outside
  * FrockBot. The shape follows FrockBot's Access Package: stateless, a token
@@ -8,15 +8,18 @@
  * sign people in for it:
  *
  * 1. `startSignIn` sends the browser to `/api/auth/privy/sign-in`.
- * 2. The page runs Privy's browser SDK: an email, a one-time code, and Privy
- *    hands the browser an access token and an identity token.
+ * 2. The page runs Privy's browser SDK: Discord's consent screen, back to the
+ *    page, and Privy hands the browser an access token and an identity token.
  * 3. The page posts both to `/api/auth/privy/session`. The Package verifies
- *    them, takes the verified email from the identity token, and sets its own
+ *    them, requires a Discord account in the identity token, and sets its own
  *    signed session cookie.
  * 4. `getSession` reads that cookie on every request after.
  *
- * Every User it admits has a verified email, so FrockBot's email-keyed
- * admission applies unchanged (`admission: "authority"`).
+ * A User has an email only when Privy verified one. Discord's email doesn't
+ * count: Privy leaves it out of the identity token, and Discord lets an
+ * account keep an address it never verified. So FrockBot's email-keyed
+ * features (invitations, the sign-in address a Bot trusts) don't apply to
+ * most DexBot Users, and admission has to be open.
  */
 import type {
   AuthIdentityV1,
@@ -208,7 +211,7 @@ export function createPrivyPackageV1(
       logRefusal("session request", error);
       return signInFailed(400);
     }
-    let email: string;
+    let email: string | undefined;
     let subject: string;
     try {
       const verification = { key: await getPrivyKey(), appId: appId!, now };
@@ -227,7 +230,7 @@ export function createPrivyPackageV1(
     }
     const value = await sealSessionV1(await getCookieKey(), {
       userId: await privyUserIdV1(subject),
-      email,
+      ...(email === undefined ? {} : { email }),
       expiresAt: now() + ttlMs,
     });
     const headers = new Headers(NO_STORE);
@@ -300,14 +303,10 @@ export function createPrivyPackageV1(
       if (!value) return null;
       const session = await openSessionV1(await getCookieKey(), value, now);
       if (!session) return null;
-      return {
-        user: {
-          id: session.userId,
-          email: session.email,
-          // Only an email Privy verified with a one-time code is sealed.
-          emailVerified: true,
-        },
-      };
+      // Only an email Privy verified with a one-time code is ever sealed.
+      return session.email === undefined
+        ? { user: { id: session.userId } }
+        : { user: { id: session.userId, email: session.email, emailVerified: true } };
     },
     // The cookie is ours to clear; Privy's own session lives in the browser's
     // storage, so the sign-in page ends that one when it sees `signed-out`.
@@ -358,9 +357,8 @@ export function privyAuthPackageBuildV1(
       },
       NATIVE_TOKEN_SECRET_V1,
     ],
-    // Privy lets anybody with an email sign up, so it is not an allowlist:
-    // the deployment's admission authority decides, keyed on the verified
-    // email every identity here carries.
+    // Anybody with a Discord account can sign up, so this is not an
+    // allowlist: the deployment's admission authority decides.
     admission: "authority",
     nativeTokenSecret: {
       ...NATIVE_TOKEN_SECRET_V1,

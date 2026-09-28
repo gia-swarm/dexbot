@@ -9,9 +9,11 @@ import {
 import {
   TEST_APP_ID,
   TEST_DID,
+  TEST_DISCORD_ID,
   TEST_EMAIL,
   TEST_NOW,
   accessClaims,
+  discordAccount,
   identityClaims,
   testPrivyApp,
   type TestPrivyApp,
@@ -159,51 +161,61 @@ describe("access tokens", () => {
 });
 
 describe("identity tokens", () => {
-  test("a valid token yields its verified email", async () => {
+  const discord = { subject: TEST_DISCORD_ID, username: "person" };
+
+  test("a Discord sign-in yields its account and no email", async () => {
     const claims = await verifyPrivyIdentityTokenV1(
       await app.sign(identityClaims()),
       verification,
     );
-    expect(claims).toEqual({ subject: TEST_DID, email: TEST_EMAIL });
+    expect(claims).toEqual({ subject: TEST_DID, discord });
   });
 
-  test("the expanded verified_at form is accepted too", async () => {
+  test("an email Privy verified comes along", async () => {
     const token = await app.sign(
-      identityClaims({}, [{ type: "email", address: " person@example.com ", verified_at: 1 }]),
+      identityClaims({}, [
+        discordAccount(),
+        { type: "email", address: " person@example.com ", verified_at: 1 },
+      ]),
     );
-    expect((await verifyPrivyIdentityTokenV1(token, verification)).email).toBe(TEST_EMAIL);
+    expect(await verifyPrivyIdentityTokenV1(token, verification)).toEqual({
+      subject: TEST_DID,
+      discord,
+      email: TEST_EMAIL,
+    });
   });
 
-  test("a person with no email account is refused", async () => {
-    const token = await app.sign(
-      identityClaims({}, [{ type: "wallet", address: "0xabc", lv: 1 }]),
-    );
-    expect(await refusal(verifyPrivyIdentityTokenV1(token, verification))).toBe(
-      "token carries no verified email",
-    );
+  test("Discord's own email never counts", async () => {
+    // Privy leaves it out today; if it ever appeared, Discord may not have
+    // verified it.
+    const token = await app.sign(identityClaims({}, [discordAccount({ email: TEST_EMAIL })]));
+    expect((await verifyPrivyIdentityTokenV1(token, verification)).email).toBeUndefined();
   });
 
-  test("an email account with no verification time is refused", async () => {
-    const token = await app.sign(identityClaims({}, [{ type: "email", address: TEST_EMAIL }]));
-    expect(await refusal(verifyPrivyIdentityTokenV1(token, verification))).toBe(
-      "token carries no verified email",
-    );
+  test("an unverified or malformed email is left out", async () => {
+    for (const email of [
+      { type: "email", address: TEST_EMAIL },
+      { type: "email", address: "nobody", lv: 1 },
+      { type: "google_oauth", email: TEST_EMAIL, subject: "1", lv: 1 },
+    ]) {
+      const token = await app.sign(identityClaims({}, [discordAccount(), email]));
+      expect((await verifyPrivyIdentityTokenV1(token, verification)).email).toBeUndefined();
+    }
   });
 
-  test("an email from an OAuth account does not count", async () => {
-    const token = await app.sign(
-      identityClaims({}, [{ type: "google_oauth", email: TEST_EMAIL, subject: "1", lv: 1 }]),
-    );
-    expect(await refusal(verifyPrivyIdentityTokenV1(token, verification))).toBe(
-      "token carries no verified email",
-    );
-  });
-
-  test("a malformed address is refused", async () => {
-    const token = await app.sign(identityClaims({}, [{ type: "email", address: "nobody", lv: 1 }]));
-    expect(await refusal(verifyPrivyIdentityTokenV1(token, verification))).toBe(
-      "token carries no verified email",
-    );
+  test("a person with no Discord account is refused", async () => {
+    for (const accounts of [
+      [{ type: "wallet", address: "0xabc", chain_type: "ethereum", lv: 1 }],
+      [{ type: "email", address: TEST_EMAIL, lv: 1 }],
+      [discordAccount({ lv: undefined })],
+      [discordAccount({ subject: "" })],
+      [],
+    ]) {
+      const token = await app.sign(identityClaims({}, accounts));
+      expect(await refusal(verifyPrivyIdentityTokenV1(token, verification))).toBe(
+        "token carries no Discord account",
+      );
+    }
   });
 
   test("a token without linked accounts is refused", async () => {

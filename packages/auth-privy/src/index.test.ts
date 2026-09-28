@@ -17,6 +17,7 @@ import {
   TEST_EMAIL,
   TEST_NOW,
   accessClaims,
+  discordAccount,
   identityClaims,
   testPrivyApp,
   type TestPrivyApp,
@@ -99,7 +100,20 @@ describe("signing in", () => {
     expect(setCookie).toContain(`Max-Age=${SESSION_TTL_MS_V1 / 1000}`);
 
     const identity = await privy.getSession(withCookie(cookieOf(response)));
-    expect(identity).toEqual({
+    expect(identity).toEqual({ user: { id: await privyUserIdV1(TEST_DID) } });
+  });
+
+  test("an email Privy verified is carried into the session as verified", async () => {
+    const response = await auth().handler(
+      sessionRequest(
+        await validBody({
+          identityToken: await app.sign(
+            identityClaims({}, [discordAccount(), { type: "email", address: TEST_EMAIL, lv: 1 }]),
+          ),
+        }),
+      ),
+    );
+    expect(await auth().getSession(withCookie(cookieOf(response)))).toEqual({
       user: { id: await privyUserIdV1(TEST_DID), email: TEST_EMAIL, emailVerified: true },
     });
   });
@@ -138,7 +152,7 @@ describe("signing in", () => {
     ["a token signed by another key", async () => validBody({
       accessToken: await (await testPrivyApp()).sign(accessClaims()),
     })],
-    ["an identity with no email", async () => validBody({
+    ["an identity with no Discord account", async () => validBody({
       identityToken: await app.sign(identityClaims({}, [{ type: "wallet", address: "0x1", lv: 1 }])),
     })],
     ["tokens for two different people", async () => validBody({
