@@ -4,13 +4,16 @@
   "private": true,
   "type": "module",
   "packageManager": "bun@1.4.2",
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build": "bun run --filter '*' build",
     "typecheck": "bun run --filter '*' typecheck && tsc --noEmit -p tsconfig.json",
     "test": "bun run --filter '*' test && bun test ./scripts/",
     "deployment:config": "frockbot-deployment-config dexbot",
-    "deploy:dry-run": "bun scripts/deploy-dry-run.ts"
+    "deploy:dry-run": "bun scripts/deploy-dry-run.ts",
+    "setup": "bun scripts/setup.ts"
   },
   "dependencies": {
     "@frockbot/app": "0.7.291",
