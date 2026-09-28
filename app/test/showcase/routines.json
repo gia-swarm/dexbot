@@ -1,0 +1,995 @@
+{
+  "dex": {
+    "document": {
+      "schemaVersion": 1,
+      "surfaceId": "routines",
+      "revision": 832091968,
+      "root": {
+        "type": "group",
+        "orientation": "column",
+        "children": [
+          {
+            "type": "group",
+            "orientation": "column",
+            "title": "Scheduled",
+            "children": [
+              {
+                "type": "group",
+                "orientation": "column",
+                "title": "Weekly vault report",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "Every Monday at 8:00 am · Australia/Sydney · Last 22 Sep 2026, 8:00 am · Next 29 Sep 2026, 8:00 am",
+                    "style": "status"
+                  },
+                  {
+                    "type": "group",
+                    "orientation": "row",
+                    "children": [
+                      {
+                        "type": "action",
+                        "actionId": "open-routine",
+                        "label": "Open",
+                        "input": {
+                          "kind": "open-routine",
+                          "routineId": "weekly-report"
+                        }
+                      },
+                      {
+                        "type": "action",
+                        "actionId": "set-routine-enabled",
+                        "label": "Pause",
+                        "input": {
+                          "kind": "set-routine-enabled",
+                          "routineId": "weekly-report",
+                          "enabled": false
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "group",
+                    "orientation": "column",
+                    "title": "Weekly vault report",
+                    "children": [
+                      {
+                        "type": "text",
+                        "text": "2026-09-21T22:00:00.000Z",
+                        "style": "status"
+                      },
+                      {
+                        "type": "text",
+                        "text": "finished"
+                      },
+                      {
+                        "type": "group",
+                        "orientation": "row",
+                        "children": [
+                          {
+                            "type": "action",
+                            "actionId": "open-run",
+                            "label": "Open",
+                            "input": {
+                              "kind": "open-run",
+                              "routineId": "weekly-report",
+                              "entryId": "e3"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "group",
+                "orientation": "column",
+                "title": "APR floor alert",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "Every hour · Australia/Sydney · Last 28 Sep 2026, 7:05 pm · Next 28 Sep 2026, 8:05 pm",
+                    "style": "status"
+                  },
+                  {
+                    "type": "group",
+                    "orientation": "row",
+                    "children": [
+                      {
+                        "type": "action",
+                        "actionId": "open-routine",
+                        "label": "Open",
+                        "input": {
+                          "kind": "open-routine",
+                          "routineId": "apr-floor"
+                        }
+                      },
+                      {
+                        "type": "action",
+                        "actionId": "set-routine-enabled",
+                        "label": "Pause",
+                        "input": {
+                          "kind": "set-routine-enabled",
+                          "routineId": "apr-floor",
+                          "enabled": false
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "group",
+                    "orientation": "column",
+                    "title": "APR floor alert",
+                    "children": [
+                      {
+                        "type": "text",
+                        "text": "2026-09-28T09:05:00.000Z",
+                        "style": "status"
+                      },
+                      {
+                        "type": "text",
+                        "text": "finished"
+                      },
+                      {
+                        "type": "group",
+                        "orientation": "row",
+                        "children": [
+                          {
+                            "type": "action",
+                            "actionId": "open-run",
+                            "label": "Open",
+                            "input": {
+                              "kind": "open-run",
+                              "routineId": "apr-floor",
+                              "entryId": "e1"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "group",
+                "orientation": "column",
+                "title": "Gas-cost check",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "Every day at 8:00 pm · Australia/Sydney · Last 27 Sep 2026, 8:00 pm · Next 28 Sep 2026, 8:00 pm",
+                    "style": "status"
+                  },
+                  {
+                    "type": "group",
+                    "orientation": "row",
+                    "children": [
+                      {
+                        "type": "action",
+                        "actionId": "open-routine",
+                        "label": "Open",
+                        "input": {
+                          "kind": "open-routine",
+                          "routineId": "gas-check"
+                        }
+                      },
+                      {
+                        "type": "action",
+                        "actionId": "set-routine-enabled",
+                        "label": "Pause",
+                        "input": {
+                          "kind": "set-routine-enabled",
+                          "routineId": "gas-check",
+                          "enabled": false
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "group",
+                    "orientation": "column",
+                    "title": "Gas-cost check",
+                    "children": [
+                      {
+                        "type": "text",
+                        "text": "2026-09-27T10:00:00.000Z",
+                        "style": "status"
+                      },
+                      {
+                        "type": "text",
+                        "text": "finished"
+                      },
+                      {
+                        "type": "group",
+                        "orientation": "row",
+                        "children": [
+                          {
+                            "type": "action",
+                            "actionId": "open-run",
+                            "label": "Open",
+                            "input": {
+                              "kind": "open-run",
+                              "routineId": "gas-check",
+                              "entryId": "e2"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "set-routine-enabled",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "set-routine-enabled",
+                  "run-routine",
+                  "delete-routine",
+                  "open-run",
+                  "open-runs",
+                  "open-routine",
+                  "rotate-key",
+                  "revoke-key"
+                ]
+              },
+              "routineId": {
+                "type": "string",
+                "maxLength": 128
+              },
+              "enabled": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "kind",
+              "routineId",
+              "enabled"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "id": "run-routine",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "set-routine-enabled",
+                  "run-routine",
+                  "delete-routine",
+                  "open-run",
+                  "open-runs",
+                  "open-routine",
+                  "rotate-key",
+                  "revoke-key"
+                ]
+              },
+              "routineId": {
+                "type": "string",
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "kind",
+              "routineId"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "id": "delete-routine",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "set-routine-enabled",
+                  "run-routine",
+                  "delete-routine",
+                  "open-run",
+                  "open-runs",
+                  "open-routine",
+                  "rotate-key",
+                  "revoke-key"
+                ]
+              },
+              "routineId": {
+                "type": "string",
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "kind",
+              "routineId"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "id": "open-runs",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "set-routine-enabled",
+                  "run-routine",
+                  "delete-routine",
+                  "open-run",
+                  "open-runs",
+                  "open-routine",
+                  "rotate-key",
+                  "revoke-key"
+                ]
+              },
+              "routineId": {
+                "type": "string",
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "kind",
+              "routineId"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "id": "open-run",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "set-routine-enabled",
+                  "run-routine",
+                  "delete-routine",
+                  "open-run",
+                  "open-runs",
+                  "open-routine",
+                  "rotate-key",
+                  "revoke-key"
+                ]
+              },
+              "routineId": {
+                "type": "string",
+                "maxLength": 128
+              },
+              "entryId": {
+                "type": "string",
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "kind",
+              "routineId",
+              "entryId"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "id": "open-routine",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "set-routine-enabled",
+                  "run-routine",
+                  "delete-routine",
+                  "open-run",
+                  "open-runs",
+                  "open-routine",
+                  "rotate-key",
+                  "revoke-key"
+                ]
+              },
+              "routineId": {
+                "type": "string",
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "kind",
+              "routineId"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "id": "rotate-key",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "set-routine-enabled",
+                  "run-routine",
+                  "delete-routine",
+                  "open-run",
+                  "open-runs",
+                  "open-routine",
+                  "rotate-key",
+                  "revoke-key"
+                ]
+              },
+              "routineId": {
+                "type": "string",
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "kind",
+              "routineId"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "id": "revoke-key",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "set-routine-enabled",
+                  "run-routine",
+                  "delete-routine",
+                  "open-run",
+                  "open-runs",
+                  "open-routine",
+                  "rotate-key",
+                  "revoke-key"
+                ]
+              },
+              "routineId": {
+                "type": "string",
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "kind",
+              "routineId"
+            ],
+            "additionalProperties": false
+          }
+        }
+      ]
+    },
+    "inbox": {
+      "schemaVersion": 1,
+      "botId": "dex",
+      "entries": [
+        {
+          "schemaVersion": 1,
+          "entryId": "e1",
+          "runId": "run-e1",
+          "routineId": "apr-floor",
+          "text": "All vaults above 5% APR after the 19:00 harvest.",
+          "attribution": "APR floor alert",
+          "createdAt": "2026-09-28T09:05:00.000Z",
+          "acknowledged": true
+        },
+        {
+          "schemaVersion": 1,
+          "entryId": "e2",
+          "runId": "run-e2",
+          "routineId": "gas-check",
+          "text": "Gas share 1.9% of yield across your vaults. Nothing to flag.",
+          "attribution": "Gas-cost check",
+          "createdAt": "2026-09-27T10:00:00.000Z",
+          "acknowledged": true
+        },
+        {
+          "schemaVersion": 1,
+          "entryId": "e3",
+          "runId": "run-e3",
+          "routineId": "weekly-report",
+          "text": "Weekly report sent: +$412.80 across three vaults.",
+          "attribution": "Weekly vault report",
+          "createdAt": "2026-09-21T22:00:00.000Z",
+          "acknowledged": true
+        }
+      ],
+      "unacknowledged": 0
+    }
+  },
+  "ranges": {
+    "document": {
+      "schemaVersion": 1,
+      "surfaceId": "routines",
+      "revision": 2672162683,
+      "root": {
+        "type": "group",
+        "orientation": "column",
+        "children": [
+          {
+            "type": "group",
+            "orientation": "column",
+            "title": "Scheduled",
+            "children": [
+              {
+                "type": "group",
+                "orientation": "column",
+                "title": "Range watch",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "Every hour · Australia/Sydney · Last 28 Sep 2026, 9:02 am · Next 28 Sep 2026, 10:02 am",
+                    "style": "status"
+                  },
+                  {
+                    "type": "group",
+                    "orientation": "row",
+                    "children": [
+                      {
+                        "type": "action",
+                        "actionId": "open-routine",
+                        "label": "Open",
+                        "input": {
+                          "kind": "open-routine",
+                          "routineId": "range-watch"
+                        }
+                      },
+                      {
+                        "type": "action",
+                        "actionId": "set-routine-enabled",
+                        "label": "Pause",
+                        "input": {
+                          "kind": "set-routine-enabled",
+                          "routineId": "range-watch",
+                          "enabled": false
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "group",
+                    "orientation": "column",
+                    "title": "Range watch",
+                    "children": [
+                      {
+                        "type": "text",
+                        "text": "2026-09-27T23:02:00.000Z",
+                        "style": "status"
+                      },
+                      {
+                        "type": "text",
+                        "text": "finished"
+                      },
+                      {
+                        "type": "group",
+                        "orientation": "row",
+                        "children": [
+                          {
+                            "type": "action",
+                            "actionId": "open-run",
+                            "label": "Open",
+                            "input": {
+                              "kind": "open-run",
+                              "routineId": "range-watch",
+                              "entryId": "r1"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "group",
+                    "orientation": "column",
+                    "title": "Range watch",
+                    "children": [
+                      {
+                        "type": "text",
+                        "text": "2026-09-27T20:50:00.000Z",
+                        "style": "status"
+                      },
+                      {
+                        "type": "text",
+                        "text": "finished"
+                      },
+                      {
+                        "type": "group",
+                        "orientation": "row",
+                        "children": [
+                          {
+                            "type": "action",
+                            "actionId": "open-run",
+                            "label": "Open",
+                            "input": {
+                              "kind": "open-run",
+                              "routineId": "range-watch",
+                              "entryId": "r2"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "group",
+                "orientation": "column",
+                "title": "Morning range brief",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "Every day at 7:30 am · Australia/Sydney · Last 28 Sep 2026, 7:30 am · Next 29 Sep 2026, 7:30 am",
+                    "style": "status"
+                  },
+                  {
+                    "type": "group",
+                    "orientation": "row",
+                    "children": [
+                      {
+                        "type": "action",
+                        "actionId": "open-routine",
+                        "label": "Open",
+                        "input": {
+                          "kind": "open-routine",
+                          "routineId": "morning-brief"
+                        }
+                      },
+                      {
+                        "type": "action",
+                        "actionId": "set-routine-enabled",
+                        "label": "Pause",
+                        "input": {
+                          "kind": "set-routine-enabled",
+                          "routineId": "morning-brief",
+                          "enabled": false
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "group",
+                    "orientation": "column",
+                    "title": "Morning range brief",
+                    "children": [
+                      {
+                        "type": "text",
+                        "text": "2026-09-26T21:30:00.000Z",
+                        "style": "status"
+                      },
+                      {
+                        "type": "text",
+                        "text": "finished"
+                      },
+                      {
+                        "type": "group",
+                        "orientation": "row",
+                        "children": [
+                          {
+                            "type": "action",
+                            "actionId": "open-run",
+                            "label": "Open",
+                            "input": {
+                              "kind": "open-run",
+                              "routineId": "morning-brief",
+                              "entryId": "r3"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "set-routine-enabled",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "set-routine-enabled",
+                  "run-routine",
+                  "delete-routine",
+                  "open-run",
+                  "open-runs",
+                  "open-routine",
+                  "rotate-key",
+                  "revoke-key"
+                ]
+              },
+              "routineId": {
+                "type": "string",
+                "maxLength": 128
+              },
+              "enabled": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "kind",
+              "routineId",
+              "enabled"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "id": "run-routine",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "set-routine-enabled",
+                  "run-routine",
+                  "delete-routine",
+                  "open-run",
+                  "open-runs",
+                  "open-routine",
+                  "rotate-key",
+                  "revoke-key"
+                ]
+              },
+              "routineId": {
+                "type": "string",
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "kind",
+              "routineId"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "id": "delete-routine",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "set-routine-enabled",
+                  "run-routine",
+                  "delete-routine",
+                  "open-run",
+                  "open-runs",
+                  "open-routine",
+                  "rotate-key",
+                  "revoke-key"
+                ]
+              },
+              "routineId": {
+                "type": "string",
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "kind",
+              "routineId"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "id": "open-runs",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "set-routine-enabled",
+                  "run-routine",
+                  "delete-routine",
+                  "open-run",
+                  "open-runs",
+                  "open-routine",
+                  "rotate-key",
+                  "revoke-key"
+                ]
+              },
+              "routineId": {
+                "type": "string",
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "kind",
+              "routineId"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "id": "open-run",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "set-routine-enabled",
+                  "run-routine",
+                  "delete-routine",
+                  "open-run",
+                  "open-runs",
+                  "open-routine",
+                  "rotate-key",
+                  "revoke-key"
+                ]
+              },
+              "routineId": {
+                "type": "string",
+                "maxLength": 128
+              },
+              "entryId": {
+                "type": "string",
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "kind",
+              "routineId",
+              "entryId"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "id": "open-routine",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "set-routine-enabled",
+                  "run-routine",
+                  "delete-routine",
+                  "open-run",
+                  "open-runs",
+                  "open-routine",
+                  "rotate-key",
+                  "revoke-key"
+                ]
+              },
+              "routineId": {
+                "type": "string",
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "kind",
+              "routineId"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "id": "rotate-key",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "set-routine-enabled",
+                  "run-routine",
+                  "delete-routine",
+                  "open-run",
+                  "open-runs",
+                  "open-routine",
+                  "rotate-key",
+                  "revoke-key"
+                ]
+              },
+              "routineId": {
+                "type": "string",
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "kind",
+              "routineId"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "id": "revoke-key",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "set-routine-enabled",
+                  "run-routine",
+                  "delete-routine",
+                  "open-run",
+                  "open-runs",
+                  "open-routine",
+                  "rotate-key",
+                  "revoke-key"
+                ]
+              },
+              "routineId": {
+                "type": "string",
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "kind",
+              "routineId"
+            ],
+            "additionalProperties": false
+          }
+        }
+      ]
+    },
+    "inbox": {
+      "schemaVersion": 1,
+      "botId": "ranges",
+      "entries": [
+        {
+          "schemaVersion": 1,
+          "entryId": "r1",
+          "runId": "run-r1",
+          "routineId": "range-watch",
+          "text": "ETH/USDC back in range at 2,410–2,690 after AiLM recalibrated.",
+          "attribution": "Range watch",
+          "createdAt": "2026-09-27T23:02:00.000Z",
+          "acknowledged": false
+        },
+        {
+          "schemaVersion": 1,
+          "entryId": "r2",
+          "runId": "run-r2",
+          "routineId": "range-watch",
+          "text": "ETH/USDC left its range at 06:48.",
+          "attribution": "Range watch",
+          "createdAt": "2026-09-27T20:50:00.000Z",
+          "acknowledged": false
+        },
+        {
+          "schemaVersion": 1,
+          "entryId": "r3",
+          "runId": "run-r3",
+          "routineId": "morning-brief",
+          "text": "Quiet night: ETH moved 0.8%, every range held.",
+          "attribution": "Morning range brief",
+          "createdAt": "2026-09-26T21:30:00.000Z",
+          "acknowledged": true
+        }
+      ],
+      "unacknowledged": 2
+    }
+  }
+}

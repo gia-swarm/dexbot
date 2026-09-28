@@ -183,6 +183,12 @@ final Map<String, List<Map<String, Object?>>> _turns = {
   ],
 };
 
+/// Routines as FrockBot's own projection renders them, from
+/// `tool/showcase_routines.ts`.
+final Map<String, Object?> _routines =
+    (jsonDecode(File('test/showcase/routines.json').readAsStringSync()) as Map)
+        .cast<String, Object?>();
+
 /* ── The server ──────────────────────────────────────────────────────── */
 
 class _ScriptedServer extends NativeApi {
@@ -256,6 +262,17 @@ class _ScriptedServer extends NativeApi {
           'schemaVersion': 1,
           'unread': [for (final bot in _bots) _unread(bot)],
         };
+    }
+    final bot = RegExp(r'^/api/bots/([^/?]+)/([^?]+)').firstMatch(path);
+    final routines = _routines[bot?.group(1)] as Map?;
+    switch (bot?.group(2)) {
+      case 'routines' when path.endsWith('?as=document'):
+        if (routines != null) return routines['document'];
+      case 'routines/inbox':
+        if (routines != null) return routines['inbox'];
+      // No Computer on this deployment: the card is simply not there.
+      case 'computer':
+        throw const RequestFailure('No Computer', 404);
     }
     final turns = RegExp(r'^/api/bots/([^/]+)/turns').firstMatch(path);
     if (turns != null) {
@@ -356,6 +373,7 @@ Future<void> _window(
   String name, {
   required String open,
   Size size = const Size(1440, 900),
+  String? panelPage,
 }) async {
   debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
   tester.view.physicalSize = size;
@@ -387,10 +405,9 @@ Future<void> _window(
       ),
     ),
   );
-  await _settle(tester);
-  final hide = find.byTooltip('Hide the panel');
-  if (hide.evaluate().isNotEmpty) {
-    await tester.tap(hide.first);
+  if (panelPage != null) {
+    await _settle(tester);
+    await tester.tap(find.text(panelPage).last);
     await tester.pump();
   }
   await _capture(tester, name);
@@ -422,6 +439,11 @@ void main() {
   }, skip: _out.isEmpty);
 
   testWidgets('desktop, Range Scout open', (tester) async {
-    await _window(tester, 'desktop-range-scout', open: 'ranges');
+    await _window(
+      tester,
+      'desktop-range-scout',
+      open: 'ranges',
+      panelPage: 'All Routines',
+    );
   }, skip: _out.isEmpty);
 }
