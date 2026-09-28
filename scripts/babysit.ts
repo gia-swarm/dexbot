@@ -1,0 +1,680 @@
+/**
+ * One look at the whole delivery pipeline — `main` and every open pull
+ * request — reduced to the next action each one needs. The `/babysit` skill
+ * reads it on every tick. It reads GitHub and nothing else, and changes
+ * nothing: deciding and acting are the skill's.
+ *
+ *   bun scripts/babysit.ts          # for a person
+ *   bun scripts/babysit.ts --json   # for a caller that acts on it
+ *   bun scripts/babysit.ts --pr 12  # only the pull requests a session opened
+ *
+ * `main` comes first because it gates everything else: a pull request that is
+ * green on its own head is only ready while `main` is green, since merging
+ * onto a red `main` hides who broke it (see `.claude/skills/babysit/SKILL.md`
+ * → Stop the line). DexBot's repository is on GitHub's free plan, which has no
+ * rulesets, so GitHub itself refuses nothing: this snapshot's `held` is the
+ * only thing standing between a red `main` and a merge.
+ *
+ * DexBot does not deploy yet, so a merge is where a change ends. When a tag
+ * starts shipping production, FrockBot's `production` section (its
+ * `scripts/babysit.ts`: `latestReleaseTag`, `releaseReport`, and `shippedIn`
+ * on a landing) is the seam to bring back.
+ */
+
+import { checksOf, type GitHubJson } from "./ci-watch.js";
+
+/**
+ * The checks `.github/workflows/check.yml` reports on every pull request, by
+ * job name. A ruleset would hold this list on a paid plan; here the workflow
+ * does, and `babysit.test.ts` reads it back from the workflow so a renamed job
+ * cannot leave the snapshot waiting on a check that never comes.
+ */
+export const REQUIRED_CHECKS = ["Check", "Flutter"] as const;
+
+/** A pull request carrying this label is left alone until someone removes it. */
+export const HOLD_LABEL = "hold";
+
+/**
+ * A pull request carrying this label repairs `main`, so it may merge while
+ * `main` is red. A revert (title `Revert "…"`) counts without the label.
+ */
+export const FIX_MAIN_LABEL = "fix-main";
+
+/**
+ * The commit status `scripts/main-health.ts` keeps on every open pull
+ * request. It reports `main`, not the pull request, so its failing is never
+ * the pull request's to fix. Nothing enforces it on the free plan: it is a
+ * signal to whoever looks at the pull request, not a gate.
+ */
+export const MAIN_HEALTH_CHECK = "main-health";
+
+/**
+ * Whether a pull request may merge while `main` is red. Applying a label
+ * takes triage rights, but anyone can title a fork's pull request
+ * `Revert "…"`, so the title counts only on a branch of this repository.
+ */
+export function repairsMain(pullRequest: {
+  labels: readonly string[];
+  title: string;
+  crossRepository: boolean;
+}): boolean {
+  return (
+    pullRequest.labels.includes(FIX_MAIN_LABEL) ||
+    (!pullRequest.crossRepository && /^Revert "/.test(pullRequest.title))
+  );
+}
+
+export interface RunRef {
+  id: number;
+  sha: string;
+  url: string;
+  createdAt: string;
+}
+
+export interface FailedJob {
+  name: string;
+  /** `failure`, or `cancelled` for a job that hit its timeout. */
+  conclusion: string;
+  steps: string[];
+  url: string;
+}
+
+/** A commit on `main`'s first-parent line, and the pull request it landed. */
+export interface Suspect {
+  sha: string;
+  pullRequest: number | null;
+  title: string;
+}
+
+export interface MainState {
+  /** `unknown` when no run on `main` has settled yet. */
+  status: "green" | "red" | "unknown";
+  /**
+   * The newest run that decides `status`. A run the concurrency group
+   * displaced before it started proves nothing and is passed over; any other
+   * run that did not pass — failed, timed out (GitHub reports that as
+   * cancelled), cancelled by hand — leaves `main` unproven, so red.
+   */
+  settled?: RunRef;
+  /**
+   * `settled` is a failed run being rerun. `main` stays red until the rerun
+   * passes: a rerun keeps its id and creation time, so without this the run
+   * would drop out of the settled list and an older green run would decide.
+   */
+  rerunning?: boolean;
+  /** A run still going, which covers commits newer than `settled`. */
+  running?: RunRef;
+  /** When the first failed run of the current red streak started. */
+  redSince?: string;
+  /** The newest passing run before the streak: its head is the last good commit. */
+  lastGreen?: RunRef;
+  failedJobs: FailedJob[];
+  /**
+   * Every pull request that landed between the last good commit and the
+   * failing head, oldest first. One of them broke `main`, or a flake did.
+   */
+  suspects: Suspect[];
+}
+
+export type PullRequestAction =
+  "merge" | "rebase" | "fix" | "wait" | "held" | "skip";
+
+export interface PullRequestState {
+  number: number;
+  title: string;
+  url: string;
+  branch: string;
+  headSha: string;
+  author: string;
+  labels: string[];
+  action: PullRequestAction;
+  reason: string;
+  failedChecks: string[];
+  /**
+   * Minutes since the head commit: how long its author has been quiet. Read
+   * only for `fix` and `rebase`, the two actions that may mean taking the
+   * branch over.
+   */
+  idleMinutes: number | null;
+}
+
+/** The issue label that claims a red `main`'s repair for one babysitter. */
+export const MAIN_RED_LABEL = "main-red";
+
+/** A babysitter's claim on repairing a red `main`: an open `main-red` issue. */
+export interface RepairClaim {
+  issue: number;
+  url: string;
+  title: string;
+  createdAt: string;
+}
+
+/**
+ * A pull request a scoped babysitter watches that is no longer open. With no
+ * deploy yet, merged is shipped.
+ */
+export interface Landing {
+  pullRequest: number;
+  state: "merged" | "closed";
+  mergeSha: string;
+}
+
+export interface Snapshot {
+  takenAt: string;
+  main: MainState;
+  /** Set while another babysitter (or this one) owns repairing `main`. */
+  repairClaim: RepairClaim | null;
+  pullRequests: PullRequestState[];
+  /** Scoped to `--pr`: the watched pull requests that are no longer open. */
+  landings: Landing[];
+}
+
+function record(value: unknown, what: string): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${what} is not an object: ${JSON.stringify(value)}`);
+  }
+  return value as Record<string, unknown>;
+}
+
+function list(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function text(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function runRef(value: Record<string, unknown>): RunRef {
+  return {
+    id: Number(value.databaseId),
+    sha: text(value.headSha),
+    url: text(value.url),
+    createdAt: text(value.createdAt),
+  };
+}
+
+/**
+ * The pull request a first-parent commit on `main` landed: a merge commit
+ * says `Merge pull request #N`, a squash ends its subject with `(#N)`.
+ */
+export function pullRequestOf(message: string): number | null {
+  const subject = message.split("\n", 1)[0] ?? "";
+  const match =
+    /^Merge pull request #(\d+)\b/.exec(subject) ??
+    /\(#(\d+)\)\s*$/.exec(subject);
+  return match ? Number(match[1]) : null;
+}
+
+/** The title a first-parent commit carries: a merge commit keeps it in the body. */
+function titleOf(message: string): string {
+  const [subject = "", ...rest] = message.split("\n");
+  if (/^Merge pull request #\d+\b/.test(subject)) {
+    const body = rest.find((line) => line.trim() !== "");
+    if (body) return body.trim();
+  }
+  return subject.replace(/\s*\(#\d+\)\s*$/, "");
+}
+
+/**
+ * Walks `main`'s first-parent line from `head` back to `base`. The compare
+ * API lists every commit in the range, a merged branch's own commits
+ * included; following first parents keeps exactly one commit per landing.
+ */
+async function landedBetween(
+  gh: GitHubJson,
+  base: string,
+  head: string,
+): Promise<Suspect[]> {
+  const comparison = record(
+    await gh(["api", `repos/{owner}/{repo}/compare/${base}...${head}`]),
+    "comparison",
+  );
+  const bySha = new Map<string, { message: string; parent: string }>();
+  for (const entry of list(comparison.commits)) {
+    const commit = record(entry, "commit");
+    const parents = list(commit.parents).map((parent) =>
+      text(record(parent, "parent").sha),
+    );
+    bySha.set(text(commit.sha), {
+      message: text(record(commit.commit, "commit body").message),
+      parent: parents[0] ?? "",
+    });
+  }
+  const landed: Suspect[] = [];
+  for (let sha = head; sha && sha !== base;) {
+    const commit = bySha.get(sha);
+    if (!commit) break;
+    landed.push({
+      sha,
+      pullRequest: pullRequestOf(commit.message),
+      title: titleOf(commit.message),
+    });
+    sha = commit.parent;
+  }
+  return landed.reverse();
+}
+
+export async function mainState(gh: GitHubJson): Promise<MainState> {
+  const runs = list(
+    await gh([
+      "run",
+      "list",
+      "--workflow",
+      "main.yml",
+      "--branch",
+      "main",
+      "--json",
+      "databaseId,headSha,status,conclusion,createdAt,url,event,attempt",
+      "--limit",
+      "40",
+    ]),
+  ).map((run) => record(run, "workflow run"));
+
+  const jobsOf = async (run: Record<string, unknown>, attempt?: number) =>
+    list(
+      record(
+        await gh([
+          "run",
+          "view",
+          String(run.databaseId),
+          ...(attempt ? ["--attempt", String(attempt)] : []),
+          "--json",
+          "jobs",
+        ]),
+        "workflow run",
+      ).jobs,
+    ).map((job) => record(job, "job"));
+
+  // Newest first, each run's verdict on `main`; the walk stops at the first
+  // green, which is the last good commit. A dispatched run on `main` proves
+  // the same thing a push run does; `--branch` already drops other branches.
+  let running: Record<string, unknown> | undefined;
+  const verdicts: Array<{
+    run: Record<string, unknown>;
+    green: boolean;
+    rerunning: boolean;
+  }> = [];
+  for (const run of runs) {
+    if (!["push", "workflow_dispatch"].includes(text(run.event))) continue;
+    const conclusion = text(run.conclusion).toLowerCase();
+    if (text(run.status).toLowerCase() !== "completed") {
+      if (Number(run.attempt) > 1)
+        verdicts.push({ run, green: false, rerunning: true });
+      else running ??= run;
+    } else if (conclusion === "success") {
+      verdicts.push({ run, green: true, rerunning: false });
+      break;
+    } else if (conclusion === "cancelled") {
+      // With `cancel-in-progress: false` only a queued run is displaced, and
+      // a queued run has no jobs yet.
+      if ((await jobsOf(run)).length > 0)
+        verdicts.push({ run, green: false, rerunning: false });
+    } else if (conclusion !== "skipped" && conclusion !== "neutral") {
+      verdicts.push({ run, green: false, rerunning: false });
+    }
+  }
+
+  const empty: MainState = {
+    status: "unknown",
+    failedJobs: [],
+    suspects: [],
+    ...(running ? { running: runRef(running) } : {}),
+  };
+  const newest = verdicts[0];
+  if (!newest) return empty;
+  const settled = runRef(newest.run);
+  if (newest.green)
+    return { ...empty, status: "green", settled, lastGreen: settled };
+
+  const last = verdicts[verdicts.length - 1]!;
+  const lastGreen = last.green ? runRef(last.run) : undefined;
+  const streak = verdicts.filter((verdict) => !verdict.green);
+  const firstRed = streak[streak.length - 1]!;
+
+  // A rerun's own jobs are still going; what failed is the attempt before.
+  const jobs = await jobsOf(
+    newest.run,
+    newest.rerunning ? Number(newest.run.attempt) - 1 : undefined,
+  );
+  const failedJobs = jobs
+    .filter((job) =>
+      ["failure", "timed_out", "cancelled"].includes(
+        text(job.conclusion).toLowerCase(),
+      ),
+    )
+    .map((job) => ({
+      name: text(job.name),
+      conclusion: text(job.conclusion).toLowerCase(),
+      url: text(job.url),
+      steps: list(job.steps)
+        .map((step) => record(step, "step"))
+        .filter((step) =>
+          ["failure", "cancelled"].includes(
+            text(step.conclusion).toLowerCase(),
+          ),
+        )
+        .map((step) => text(step.name)),
+    }));
+
+  return {
+    ...empty,
+    status: "red",
+    settled,
+    ...(newest.rerunning ? { rerunning: true } : {}),
+    redSince: text(firstRed.run.createdAt),
+    ...(lastGreen ? { lastGreen } : {}),
+    failedJobs,
+    suspects: lastGreen
+      ? await landedBetween(gh, lastGreen.sha, settled.sha)
+      : [],
+  };
+}
+
+interface CheckState {
+  name: string;
+  complete: boolean;
+  passed: boolean;
+}
+
+function checkStatesOf(rollup: unknown): CheckState[] {
+  return checksOf(rollup).map((check) => ({
+    name: check.name,
+    complete: check.complete,
+    passed: ["SUCCESS", "NEUTRAL", "SKIPPED"].includes(check.conclusion),
+  }));
+}
+
+export function pullRequestState(
+  value: Record<string, unknown>,
+  context: {
+    main: MainState["status"];
+    required: readonly string[];
+    now: number;
+  },
+): PullRequestState {
+  const labels = list(value.labels)
+    .map((label) => text(record(label, "label").name))
+    .filter(Boolean);
+  const checks = checkStatesOf(value.statusCheckRollup);
+  const failedChecks = checks
+    .filter(
+      (check) =>
+        check.complete && !check.passed && check.name !== MAIN_HEALTH_CHECK,
+    )
+    .map((check) => check.name);
+  const title = text(value.title);
+  const crossRepository = value.isCrossRepository === true;
+  const fixesMain = repairsMain({ labels, title, crossRepository });
+  const state = (
+    action: PullRequestAction,
+    reason: string,
+  ): PullRequestState => ({
+    number: Number(value.number),
+    title,
+    url: text(value.url),
+    branch: text(value.headRefName),
+    headSha: text(value.headRefOid),
+    author: text(record(value.author ?? {}, "author").login),
+    labels,
+    action,
+    reason,
+    failedChecks,
+    idleMinutes: null,
+  });
+
+  if (value.isDraft === true) return state("skip", "draft");
+  if (labels.includes(HOLD_LABEL))
+    return state("skip", `labelled ${HOLD_LABEL}`);
+  if (text(value.baseRefName) !== "main")
+    return state("skip", `targets ${text(value.baseRefName)}, not main`);
+  // An outside contribution waits for Tim's review rather than for its
+  // checks: the repository is private today, but that is one setting away.
+  if (crossRepository) return state("skip", "from a fork: Tim reviews it");
+  if (text(value.reviewDecision).toUpperCase() === "CHANGES_REQUESTED")
+    return state("skip", "changes requested");
+  if (text(value.mergeable).toUpperCase() === "CONFLICTING")
+    return state("rebase", "conflicts with main");
+  if (failedChecks.length > 0)
+    return state("fix", `failing: ${failedChecks.join(", ")}`);
+
+  const missing = context.required.filter(
+    (name) => !checks.some((check) => check.name === name && check.complete),
+  );
+  const running = checks
+    .filter((check) => !check.complete)
+    .map((check) => check.name);
+  if (missing.length > 0 || running.length > 0)
+    return state(
+      "wait",
+      `waiting on ${[...new Set([...missing, ...running])].join(", ")}`,
+    );
+  if (text(value.mergeable).toUpperCase() !== "MERGEABLE")
+    return state("wait", "GitHub has not decided mergeability yet");
+
+  // With no ruleset, this is the gate: GitHub would merge onto a red `main`.
+  // `main-health` is not consulted — it trails `main` by a workflow run, and
+  // the snapshot has just read `main` itself.
+  if (context.main !== "green" && !fixesMain)
+    return state(
+      "held",
+      context.main === "red"
+        ? "green, but main is red"
+        : "green, but main has no settled run",
+    );
+  return state("merge", fixesMain ? "green and repairs main" : "green");
+}
+
+export async function pullRequestStates(
+  gh: GitHubJson,
+  main: MainState["status"],
+  now: number,
+): Promise<PullRequestState[]> {
+  const required = REQUIRED_CHECKS;
+  const open = list(
+    await gh([
+      "pr",
+      "list",
+      "--state",
+      "open",
+      "--limit",
+      "100",
+      "--json",
+      "number,title,url,isDraft,labels,headRefName,headRefOid,baseRefName,mergeable,statusCheckRollup,author,isCrossRepository,reviewDecision",
+    ]),
+  ).map((value) => record(value, "pull request"));
+  const states = open
+    .map((value) => pullRequestState(value, { main, required, now }))
+    .sort((a, b) => a.number - b.number);
+  // `commits` on the list query asks GitHub for more nodes than it allows, so
+  // the head commit is read on its own, and only where it matters.
+  for (const pr of states) {
+    if (pr.action !== "fix" && pr.action !== "rebase") continue;
+    const commit = record(
+      await gh(["api", `repos/{owner}/{repo}/commits/${pr.headSha}`]),
+      "commit",
+    );
+    const committer = record(
+      record(commit.commit, "commit body").committer,
+      "committer",
+    );
+    const committedAt = Date.parse(text(committer.date));
+    if (!Number.isNaN(committedAt))
+      pr.idleMinutes = Math.max(0, Math.round((now - committedAt) / 60_000));
+  }
+  return states;
+}
+
+export async function repairClaim(gh: GitHubJson): Promise<RepairClaim | null> {
+  const issues = list(
+    await gh([
+      "issue",
+      "list",
+      "--label",
+      MAIN_RED_LABEL,
+      "--state",
+      "open",
+      "--json",
+      "number,url,title,createdAt",
+    ]),
+  ).map((issue) => record(issue, "issue"));
+  const oldest = issues.sort((a, b) =>
+    text(a.createdAt).localeCompare(text(b.createdAt)),
+  )[0];
+  return oldest
+    ? {
+        issue: Number(oldest.number),
+        url: text(oldest.url),
+        title: text(oldest.title),
+        createdAt: text(oldest.createdAt),
+      }
+    : null;
+}
+
+
+/**
+ * Each watched pull request that is no longer open: merged, or closed
+ * without merging.
+ */
+async function landings(
+  gh: GitHubJson,
+  watched: readonly number[],
+  open: readonly PullRequestState[],
+): Promise<Landing[]> {
+  const result: Landing[] = [];
+  for (const number of watched) {
+    if (open.some((pr) => pr.number === number)) continue;
+    const value = record(
+      await gh(["pr", "view", String(number), "--json", "state,mergeCommit"]),
+      "pull request",
+    );
+    const mergeSha = text(record(value.mergeCommit ?? {}, "merge commit").oid);
+    result.push(
+      text(value.state).toUpperCase() === "MERGED" && mergeSha
+        ? { pullRequest: number, state: "merged", mergeSha }
+        : { pullRequest: number, state: "closed", mergeSha: "" },
+    );
+  }
+  return result;
+}
+
+/**
+ * `only` scopes the pull requests to the ones a babysitter was asked to
+ * watch; `main` is everyone's and is always read.
+ */
+export async function snapshot(
+  gh: GitHubJson,
+  now: number = Date.now(),
+  only: readonly number[] = [],
+): Promise<Snapshot> {
+  const main = await mainState(gh);
+  const [allPullRequests, claim] = await Promise.all([
+    pullRequestStates(gh, main.status, now),
+    repairClaim(gh),
+  ]);
+  const pullRequests = only.length
+    ? allPullRequests.filter((pr) => only.includes(pr.number))
+    : allPullRequests;
+  return {
+    takenAt: new Date(now).toISOString(),
+    main,
+    repairClaim: claim,
+    pullRequests,
+    landings: only.length ? await landings(gh, only, allPullRequests) : [],
+  };
+}
+
+function since(iso: string, now: number): string {
+  const minutes = Math.max(0, Math.round((now - Date.parse(iso)) / 60_000));
+  return minutes < 60
+    ? `${minutes}m`
+    : `${Math.floor(minutes / 60)}h${String(minutes % 60).padStart(2, "0")}m`;
+}
+
+export function formatSnapshot(value: Snapshot): string {
+  const now = Date.parse(value.takenAt);
+  const lines: string[] = [];
+  const { main } = value;
+  const short = (sha: string) => sha.slice(0, 9);
+
+  if (main.status === "red") {
+    lines.push(
+      `main   RED for ${since(main.redSince ?? main.settled!.createdAt, now)} — run ${main.settled!.id} on ${short(main.settled!.sha)}`,
+    );
+    if (main.rerunning)
+      lines.push(
+        `       rerunning: run ${main.settled!.id} is on a new attempt`,
+      );
+    for (const job of main.failedJobs)
+      lines.push(
+        `       ✗ ${job.name}${job.conclusion === "failure" ? "" : ` (${job.conclusion})`}${job.steps.length ? ` › ${job.steps.join(", ")}` : ""}`,
+      );
+    if (main.lastGreen) {
+      lines.push(
+        `       landed since last green ${short(main.lastGreen.sha)}:`,
+      );
+      for (const suspect of main.suspects)
+        lines.push(
+          `         ${suspect.pullRequest ? `#${suspect.pullRequest}` : short(suspect.sha)}  ${suspect.title}`,
+        );
+    } else lines.push("       no green run in the last 40 — read further back");
+  } else if (main.status === "green") {
+    lines.push(
+      `main   green — run ${main.settled!.id} on ${short(main.settled!.sha)}`,
+    );
+  } else lines.push("main   no settled run yet");
+  if (main.running)
+    lines.push(
+      `       running: run ${main.running.id} on ${short(main.running.sha)}`,
+    );
+
+  if (value.repairClaim)
+    lines.push(
+      `       repair claimed: #${value.repairClaim.issue} ${value.repairClaim.title}`,
+    );
+
+  for (const landing of value.landings)
+    lines.push(
+      `landed #${landing.pullRequest} ${
+        landing.state === "closed"
+          ? "closed without merging"
+          : `merged as ${landing.mergeSha.slice(0, 9)}`
+      }`,
+    );
+  if (value.pullRequests.length === 0) lines.push("PRs    none open");
+  value.pullRequests.forEach((pr, index) => {
+    const idle =
+      pr.idleMinutes === null
+        ? ""
+        : `, idle ${since(new Date(now - pr.idleMinutes * 60_000).toISOString(), now)}`;
+    lines.push(
+      `${index === 0 ? "PRs    " : "       "}#${pr.number}  ${pr.action.padEnd(6)}  ${pr.title} (${pr.reason}${idle})`,
+    );
+  });
+  return lines.join("\n");
+}
+
+/** Runs `gh` and parses what it prints. */
+export async function ghJson(args: readonly string[]): Promise<unknown> {
+  const child = Bun.spawn(["gh", ...args], { stdout: "pipe", stderr: "pipe" });
+  const [stdout, stderr, code] = await Promise.all([
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
+    child.exited,
+  ]);
+  if (code !== 0)
+    throw new Error(`gh ${args.join(" ")} failed: ${stderr.trim()}`);
+  return stdout.trim() ? JSON.parse(stdout) : null;
+}
+
+if (import.meta.main) {
+  const only = process.argv
+    .flatMap((arg, index, argv) => (arg === "--pr" ? [argv[index + 1]] : []))
+    .map(Number)
+    .filter((number) => Number.isInteger(number) && number > 0);
+  const value = await snapshot(ghJson, Date.now(), only);
+  console.log(
+    process.argv.includes("--json")
+      ? JSON.stringify(value, null, 2)
+      : formatSnapshot(value),
+  );
+}

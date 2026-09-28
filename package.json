@@ -7,8 +7,8 @@
   "workspaces": ["packages/*"],
   "scripts": {
     "build": "bun run --filter '*' build",
-    "typecheck": "bun run --filter '*' typecheck",
-    "test": "bun run --filter '*' test",
+    "typecheck": "bun run --filter '*' typecheck && tsc --noEmit -p tsconfig.json",
+    "test": "bun run --filter '*' test && bun test ./scripts/",
     "deployment:config": "frockbot-deployment-config dexbot",
     "deploy:dry-run": "bun scripts/deploy-dry-run.ts"
   },

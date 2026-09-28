@@ -1,0 +1,17 @@
+{
+  // `scripts/` at the root: the deploy dry run and the babysitter's tools.
+  // The Packages carry their own configs and typecheck through their own
+  // `typecheck` scripts.
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["bun"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": ["scripts"]
+}
