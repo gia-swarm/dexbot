@@ -1,0 +1,61 @@
+name: Main
+
+# The verdict on `main`: whether what the merge produced is sound. A pull
+# request's `Check` ran on its own head; two green pull requests can still
+# merge into a broken `main`, so the same tier runs again here on the merge
+# commit, beside the release web build, the one build the pull request tier
+# leaves out. `scripts/babysit.ts` reads this workflow's runs to decide
+# whether `main` is green, and `main-health.yml` follows it.
+#
+# Nothing deploys yet. When DexBot ships from `main`, the deploy (or the tag
+# that deploys) goes after these jobs, gated on them, as FrockBot's does.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Queued, never cancelled: every landing gets a verdict, which is what lets
+# the babysitter name the pull request that turned `main` red. Only a run
+# still queued behind a newer one is displaced, and it has no jobs, which is
+# how `scripts/babysit.ts` tells it from a run that failed.
+concurrency:
+  group: main
+  cancel-in-progress: false
+
+jobs:
+  fast:
+    name: Fast tier
+    uses: ./.github/workflows/check.yml
+
+  web:
+    name: Flutter web build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: 3.47.0
+          channel: stable
+          cache: true
+
+      - name: Resolve pinned packages
+        run: flutter pub get --enforce-lockfile
+
+      # A release compile catches what `flutter analyze` and the VM tests do
+      # not: web-only imports and the dart2js build of the pinned client.
+      - name: Build web
+        run: flutter build web --release --no-pub
