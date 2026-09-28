@@ -8,13 +8,9 @@
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true,
-    "verbatimModuleSyntax": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "paths": {
-      // Until @frockbot/core is published; see the shim's header.
-      "@frockbot/core/contracts": ["./src/frockbot-core-contracts.shim.ts"]
-    }
+    // No flags stricter than FrockBot's own: @frockbot/core is published as
+    // TypeScript source, so tsc checks its files under these options too.
+    "verbatimModuleSyntax": true
   },
   "include": ["src", "scripts"]
 }

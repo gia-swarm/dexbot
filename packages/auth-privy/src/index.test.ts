@@ -46,7 +46,7 @@ spyOn(console, "error").mockImplementation(() => {});
 
 function auth() {
   clock = TEST_NOW;
-  return createPrivyPackageV1(environment, { signInScript: SCRIPT, now });
+  return createPrivyPackageV1(environment, { signInScript: SCRIPT, productName: "DexBot", now });
 }
 
 function sessionRequest(
@@ -162,7 +162,7 @@ describe("signing in", () => {
   test("a cross-site post is refused before any token is read", async () => {
     const privy = auth();
     for (const headers of [
-      { origin: "https://evil.example" },
+      { origin: "https://evil.example" } as Record<string, string>,
       { "sec-fetch-site": "cross-site" },
       { origin: "" },
     ]) {
@@ -230,7 +230,7 @@ describe("the session cookie", () => {
     const { value } = await signedIn();
     const other = createPrivyPackageV1(
       { ...environment, PRIVY_SESSION_SECRET: "t".repeat(40) },
-      { signInScript: SCRIPT, now },
+      { signInScript: SCRIPT, productName: "DexBot", now },
     );
     expect(await other.getSession(withCookie(value))).toBeNull();
   });
@@ -393,7 +393,7 @@ describe("configuration", () => {
   ];
   for (const [name, change] of missing) {
     test(`${name} answers 503 on every route and knows nobody`, async () => {
-      const privy = createPrivyPackageV1({ ...environment, ...change }, { signInScript: SCRIPT });
+      const privy = createPrivyPackageV1({ ...environment, ...change }, { signInScript: SCRIPT, productName: "DexBot" });
       const request = new Request(`${ORIGIN}/api/auth/privy/sign-in`);
       expect((await privy.handler(request)).status).toBe(503);
       expect((await privy.startSignIn(request, "/")).status).toBe(503);
@@ -405,7 +405,7 @@ describe("configuration", () => {
   test("a verification key that will not import fails sign-in, not the Worker", async () => {
     const privy = createPrivyPackageV1(
       { ...environment, PRIVY_VERIFICATION_KEY: "-----BEGIN PUBLIC KEY-----\nAAAA\n-----END PUBLIC KEY-----" },
-      { signInScript: SCRIPT, now },
+      { signInScript: SCRIPT, productName: "DexBot", now },
     );
     const response = await privy.handler(sessionRequest(await validBody()));
     expect(response.status).toBe(401);
@@ -430,7 +430,7 @@ describe("the build", () => {
   });
 
   test("stores nothing, so declares none of the stored-identity members", () => {
-    const privy = build.create(environment);
+    const privy = build.create(environment, { productName: "DexBot" });
     expect(privy.storedIdentity).toBeUndefined();
     expect(privy.listStoredIdentities).toBeUndefined();
     expect(privy.deleteStoredIdentity).toBeUndefined();

@@ -65,6 +65,7 @@ function escapeHtml(value: string): string {
 }
 
 export function signInPageHtmlV1(options: {
+  productName: string;
   appId: string;
   returnTo: string;
   signedOut: boolean;
@@ -77,13 +78,13 @@ export function signInPageHtmlV1(options: {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="no-referrer">
-<title>Sign in</title>
+<title>Sign in to ${escapeHtml(options.productName)}</title>
 <link rel="stylesheet" href="${SIGN_IN_STYLE_PATH_V1}">
 <script type="module" src="${escapeHtml(script)}"></script>
 </head>
 <body data-app-id="${escapeHtml(options.appId)}" data-return-to="${escapeHtml(options.returnTo)}" data-session-path="${SESSION_PATH_V1}"${options.signedOut ? ' data-signed-out=""' : ""}>
 <main>
-<h1>Sign in</h1>
+<h1>Sign in to ${escapeHtml(options.productName)}</h1>
 <form id="email-form" hidden>
 <label for="email">Email</label>
 <input id="email" name="email" type="email" autocomplete="email" required>

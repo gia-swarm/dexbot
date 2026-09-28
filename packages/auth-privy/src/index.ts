@@ -161,6 +161,8 @@ function sameOrigin(request: Request, origin: string): boolean {
 export interface PrivyPackageOptionsV1 {
   /** The bundled sign-in script the page loads. */
   readonly signInScript: SignInScriptV1;
+  /** The product's name, which the sign-in page shows. */
+  readonly productName: string;
   readonly now?: () => number;
   /** How long a session lasts; seven days unless a test says otherwise. */
   readonly sessionTtlMs?: number;
@@ -249,6 +251,7 @@ export function createPrivyPackageV1(
       if (pathname === SIGN_IN_PATH_V1) {
         return new Response(
           signInPageHtmlV1({
+            productName: options.productName,
             appId: appId!,
             returnTo: safeReturnToV1(
               url.searchParams.get("returnTo"),
@@ -365,7 +368,8 @@ export function privyAuthPackageBuildV1(
     },
     // Nothing is stored, so there is no identity to look up by User id, none
     // to list and none to forget, and no identity row to ask admission about.
-    create: (environment) => createPrivyPackageV1(environment, { signInScript }),
+    create: (environment, { productName }) =>
+      createPrivyPackageV1(environment, { signInScript, productName }),
   };
 }
 

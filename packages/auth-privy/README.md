@@ -30,4 +30,4 @@ bun run test
 
 `src/auth-package.privy.ts` is the chooser module a deployment profile names; it exports `AUTH_PACKAGE_V1` and `AuthPackageEnvironmentV1`.
 
-Until `@frockbot/core` is published, `@frockbot/core/contracts` resolves through `tsconfig.json` `paths` to `src/frockbot-core-contracts.shim.ts`. Delete that file and the `paths` entry once the package is on npm.
+The contract comes from `@frockbot/core/contracts`, pinned to the same release as every other `@frockbot/*` package.
