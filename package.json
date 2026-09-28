@@ -1,0 +1,31 @@
+{
+  "name": "dexbot",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.2",
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "build": "bun run --filter '*' build",
+    "typecheck": "bun run --filter '*' typecheck",
+    "test": "bun run --filter '*' test",
+    "deployment:config": "frockbot-deployment-config dexbot",
+    "deploy:dry-run": "bun scripts/deploy-dry-run.ts"
+  },
+  "dependencies": {
+    "@frockbot/app": "0.7.291",
+    "@frockbot/applet-sdk": "0.7.291",
+    "@frockbot/applets": "0.7.291",
+    "@frockbot/cloudflare": "0.7.291",
+    "@frockbot/computer": "0.7.291",
+    "@frockbot/core": "0.7.291",
+    "@frockbot/frock-compose": "0.7.291",
+    "@frockbot/providers": "0.7.291"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20260920.1",
+    "@types/bun": "1.4.2",
+    "typescript": "5.9.3",
+    "wrangler": "4.129.0"
+  }
+}

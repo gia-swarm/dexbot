@@ -1,0 +1,17 @@
+{
+  // The flags FrockBot's own brand compiles with: @frockbot/core is published
+  // as TypeScript source, so tsc checks its files under these options too.
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["bun"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": ["src", "scripts"]
+}

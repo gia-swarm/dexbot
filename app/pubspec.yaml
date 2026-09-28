@@ -1,0 +1,46 @@
+name: dexbot_app
+description: >-
+  DexBot's application: FrockBot's client package run with DexBot's brand.
+publish_to: none
+version: 0.0.0+1
+
+# The SDK FrockBot's client requires; do not move it apart from the pinned
+# release below, whose pubspec names the same one.
+environment:
+  sdk: ">=3.13.0 <3.14.0"
+  flutter: "3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # FrockBot's client, run with DexBot's brand (ADR 0038 §4), at the release
+  # every @frockbot/* npm package is pinned to. Move it and the override below
+  # together with those.
+  frockbot_client:
+    git:
+      url: https://github.com/timoconnellaus/frockbot.git
+      path: apps/native/packages/frockbot_client
+      ref: v0.7.291
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: 6.0.0
+  # What the test imports directly; the versions are the client's.
+  http: 1.6.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    # DexBot's characters, which its brand names by these keys.
+    - assets/characters/
+    - assets/branding/
+
+dependency_overrides:
+  # FrockBot's vendored WebKit adapter (a non-persistent website data store),
+  # carried as FrockBot's application carries it, from the same release.
+  webview_flutter_wkwebview:
+    git:
+      url: https://github.com/timoconnellaus/frockbot.git
+      path: apps/native/vendor/webview_flutter_wkwebview
+      ref: v0.7.291

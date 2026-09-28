@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "name": "dexbot",
+  "accountId": "00000000000000000000000000000000",
+  "prefix": "dexbot",
+  "authPackage": "../packages/auth-privy/src/auth-package.privy.ts",
+  "authEnvironment": {
+    "secrets": [
+      {
+        "name": "PRIVY_VERIFICATION_KEY",
+        "why": "Verifies the tokens Privy signs; the app's verification key from the Privy dashboard."
+      },
+      {
+        "name": "PRIVY_SESSION_SECRET",
+        "why": "Signs DexBot's own session cookie. Rotating it signs everybody out."
+      },
+      {
+        "name": "NATIVE_TOKEN_SECRET",
+        "why": "Signs the native sign-in door's codes and bearers."
+      }
+    ],
+    "vars": { "PRIVY_APP_ID": "privy-app-id-pending" }
+  },
+  "brand": "../packages/brand/src/brand.ts",
+  "webClient": "../dist/web",
+  "nativeAuth": ["android", "macos", "ios"],
+  "workers": { "app": {} }
+}

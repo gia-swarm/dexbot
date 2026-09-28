@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["bun"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    // No flags stricter than FrockBot's own: @frockbot/core is published as
+    // TypeScript source, so tsc checks its files under these options too.
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src", "scripts"]
+}

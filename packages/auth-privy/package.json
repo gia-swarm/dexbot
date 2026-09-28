@@ -1,0 +1,24 @@
+{
+  "name": "@dexbot/auth-privy",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./auth-package": "./src/auth-package.privy.ts"
+  },
+  "scripts": {
+    "build": "bun scripts/build-sign-in.ts",
+    "typecheck": "bun run build && tsc --noEmit -p tsconfig.json && tsc --noEmit -p client/tsconfig.json",
+    "test": "bun run build && bun test"
+  },
+  "devDependencies": {
+    "@privy-io/js-sdk-core": "0.76.2",
+    "@types/bun": "1.4.2",
+    "typescript": "7.0.2",
+    "@cloudflare/workers-types": "5.20260920.1"
+  },
+  "dependencies": {
+    "@frockbot/core": "0.7.291"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  // The browser half: DOM, and none of the Worker's or Bun's globals.
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": [],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": ["."]
+}

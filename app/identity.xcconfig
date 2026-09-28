@@ -1,0 +1,18 @@
+// DexBot's platform identity: the one place its application ids and the name
+// under the launcher icon are written. Every value is a placeholder until the
+// product is named. Xcode includes this file from ios/ and macos/
+// (Runner/Configs/AppInfo.xcconfig); Gradle reads the same keys
+// (android/app/build.gradle.kts). Keep it to plain `KEY = value` lines.
+// The in-app brand — the name every screen reads, the characters — is
+// lib/brand.dart, and test/brand_test.dart fails if the two disagree.
+DEXBOT_APP_NAME = DexBot
+DEXBOT_ANDROID_APPLICATION_ID = com.dexbot.app
+DEXBOT_APPLE_BUNDLE_ID = com.dexbot.app
+// The custom URL scheme the iOS and macOS apps register for the browser's
+// sign-in and Connect returns. lib/brand.dart names it as `nativeScheme`, the
+// Android debug manifest registers `<scheme>-dev`, and the server brand's
+// `nativeScheme` must say the same.
+DEXBOT_URL_SCHEME = dexbot
+// The deployment's host, for iOS and macOS Universal Links. Android takes its
+// App Link host from `--dart-define=FROCKBOT_ORIGIN` instead.
+DEXBOT_LINK_HOST = dexbot.invalid
