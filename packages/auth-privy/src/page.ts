@@ -11,7 +11,7 @@ export const SIGN_IN_PATH_V1 = `${ROUTE_PREFIX_V1}/sign-in`;
 export const SIGN_IN_SCRIPT_PATH_V1 = `${ROUTE_PREFIX_V1}/sign-in.js`;
 export const SIGN_IN_STYLE_PATH_V1 = `${ROUTE_PREFIX_V1}/sign-in.css`;
 export const SESSION_PATH_V1 = `${ROUTE_PREFIX_V1}/session`;
-/** The one host the bundled SDK talks to for email sign-in. */
+/** The one host the bundled SDK talks to. Discord is reached by navigation. */
 export const PRIVY_API_ORIGIN_V1 = "https://auth.privy.io";
 
 /** The bundled sign-in script, and the hash its URL is versioned by. */
@@ -85,18 +85,7 @@ export function signInPageHtmlV1(options: {
 <body data-app-id="${escapeHtml(options.appId)}" data-return-to="${escapeHtml(options.returnTo)}" data-session-path="${SESSION_PATH_V1}"${options.signedOut ? ' data-signed-out=""' : ""}>
 <main>
 <h1>Sign in to ${escapeHtml(options.productName)}</h1>
-<form id="email-form" hidden>
-<label for="email">Email</label>
-<input id="email" name="email" type="email" autocomplete="email" required>
-<button type="submit">Send code</button>
-</form>
-<form id="code-form" hidden>
-<p id="code-sent"></p>
-<label for="code">Code</label>
-<input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" required>
-<button type="submit">Sign in</button>
-<button type="button" id="restart" class="secondary">Use a different email</button>
-</form>
+<button type="button" id="discord" hidden>Continue with Discord</button>
 <p id="status" role="status" aria-live="polite">Loading…</p>
 <noscript><p>Signing in needs JavaScript.</p></noscript>
 </main>
@@ -111,11 +100,7 @@ export const SIGN_IN_STYLE_V1 = `:root{color-scheme:light dark;--fg:#16161a;--bg
 body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif}
 main{width:100%;max-width:22rem;padding:2rem 1rem}
 h1{font-size:1.5rem;margin:0 0 1.5rem}
-form{display:grid;gap:.75rem}
-label{font-weight:600}
-input{font:inherit;padding:.625rem .75rem;border:1px solid var(--line);border-radius:.5rem;background:transparent;color:inherit}
-button{font:inherit;font-weight:600;padding:.625rem .75rem;border:0;border-radius:.5rem;background:var(--accent);color:var(--on-accent);cursor:pointer}
-button.secondary{background:transparent;color:var(--accent)}
+button{width:100%;font:inherit;font-weight:600;padding:.625rem .75rem;border:0;border-radius:.5rem;background:var(--accent);color:var(--on-accent);cursor:pointer}
 button:disabled{opacity:.6;cursor:progress}
-#status,#code-sent{color:var(--muted);min-height:1.5em}
+#status{color:var(--muted);min-height:1.5em}
 `;

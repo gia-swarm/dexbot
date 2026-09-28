@@ -1,6 +1,11 @@
 /**
- * The sign-in page's one script: Privy email login, then hand the Worker the
- * tokens so it can set its own session cookie.
+ * The sign-in page's one script: Discord through Privy, then hand the Worker
+ * the tokens so it can set its own session cookie.
+ *
+ * Privy's OAuth flow leaves the page: the button sends the browser to Discord,
+ * which comes back here with `privy_oauth_code` and `privy_oauth_state`, and
+ * Privy trades those for its tokens. `returnTo` rides along in this page's own
+ * URL, so it survives the round trip.
  *
  * Bundled with Privy's vanilla SDK (`@privy-io/js-sdk-core`) by
  * `scripts/build-sign-in.ts`. Everything it needs is in the body's `data-`
@@ -11,28 +16,17 @@ import Privy, { LocalStorage } from "@privy-io/js-sdk-core";
 const FAILED = "Couldn't finish signing in. Please try again.";
 
 const data = document.body.dataset;
-const element = <T extends HTMLElement>(id: string) =>
-  document.getElementById(id) as T;
-const emailForm = element<HTMLFormElement>("email-form");
-const codeForm = element<HTMLFormElement>("code-form");
-const emailInput = element<HTMLInputElement>("email");
-const codeInput = element<HTMLInputElement>("code");
-const codeSent = element<HTMLParagraphElement>("code-sent");
-const status = element<HTMLParagraphElement>("status");
+const discord = document.getElementById("discord") as HTMLButtonElement;
+const status = document.getElementById("status") as HTMLParagraphElement;
 
 function say(message: string): void {
   status.textContent = message;
 }
 
-function busy(form: HTMLFormElement, value: boolean): void {
-  for (const control of form.querySelectorAll("button, input"))
-    (control as HTMLButtonElement | HTMLInputElement).disabled = value;
-}
-
-function showEmail(): void {
-  codeForm.hidden = true;
-  emailForm.hidden = false;
-  emailInput.focus();
+function offer(message = ""): void {
+  say(message);
+  discord.disabled = false;
+  discord.hidden = false;
 }
 
 const privy = new Privy({ appId: data.appId ?? "", storage: new LocalStorage() });
@@ -62,64 +56,53 @@ async function finish(): Promise<void> {
   window.location.assign(location);
 }
 
-emailForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const email = emailInput.value.trim();
-  busy(emailForm, true);
+/** Where Discord hands the browser back: this page, still carrying `returnTo`. */
+function returnUrl(): string {
+  const url = new URL(window.location.pathname, window.location.origin);
+  url.searchParams.set("returnTo", data.returnTo ?? "/");
+  return url.toString();
+}
+
+discord.addEventListener("click", async () => {
+  discord.disabled = true;
+  say("Opening Discord…");
   try {
-    await privy.auth.email.sendCode(email);
-    codeSent.textContent = `We sent a code to ${email}.`;
-    emailForm.hidden = true;
-    codeForm.hidden = false;
-    codeInput.value = "";
-    codeInput.focus();
-    say("");
+    const { url } = await privy.auth.oauth.generateURL("discord", returnUrl());
+    if (!url) throw new Error("Privy gave no Discord URL");
+    window.location.assign(url);
   } catch (error) {
     console.error(error);
-    say("Couldn't send a code to that email. Check it and try again.");
-  } finally {
-    busy(emailForm, false);
+    offer("Couldn't reach Discord. Please try again.");
   }
-});
-
-codeForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  busy(codeForm, true);
-  try {
-    await privy.auth.email.loginWithCode(
-      emailInput.value.trim(),
-      codeInput.value.trim(),
-    );
-    await finish();
-  } catch (error) {
-    console.error(error);
-    say(FAILED);
-    busy(codeForm, false);
-  }
-});
-
-element<HTMLButtonElement>("restart").addEventListener("click", () => {
-  say("");
-  showEmail();
 });
 
 try {
   await privy.initialize();
+  const query = new URLSearchParams(window.location.search);
+  const code = query.get("privy_oauth_code");
+  const state = query.get("privy_oauth_state");
   if ("signedOut" in data) {
     // The Worker has cleared its cookie; end Privy's session too, or the next
     // visit here would sign the same person straight back in.
     await privy.auth.logout().catch((error: unknown) => console.error(error));
-    say("You're signed out.");
-    showEmail();
+    offer("You're signed out.");
+  } else if (code && state) {
+    // Back from Discord. The code is single-use, so drop it from the address
+    // before anything can fail and a reload try it again.
+    window.history.replaceState(null, "", returnUrl());
+    say("Signing in…");
+    await privy.auth.oauth.loginWithCode(code, state, "discord");
+    await finish();
+  } else if (query.has("privy_oauth_error") || query.has("error")) {
+    window.history.replaceState(null, "", returnUrl());
+    offer("Discord sign-in was cancelled.");
   } else if (await privy.getAccessToken()) {
     // Still signed in to Privy from an earlier visit.
     await finish();
   } else {
-    say("");
-    showEmail();
+    offer();
   }
 } catch (error) {
   console.error(error);
-  say(FAILED);
-  showEmail();
+  offer(FAILED);
 }

@@ -3,8 +3,9 @@
  *
  * Privy's tokens live an hour and sit in the browser's storage where the
  * Worker cannot read them on a plain navigation, so once a sign-in has proven
- * who somebody is, the Package mints a cookie of its own: the User id, the
- * verified email and an expiry, HMAC-signed with `PRIVY_SESSION_SECRET`.
+ * who somebody is, the Package mints a cookie of its own: the User id, a
+ * verified email when there is one, and an expiry, HMAC-signed with
+ * `PRIVY_SESSION_SECRET`.
  * Changing that secret signs everybody out, and is the only revocation there is.
  */
 import { decodeBase64UrlV1 } from "./token.js";
@@ -16,7 +17,8 @@ const FORMAT = "v1";
 
 export interface PrivySessionV1 {
   readonly userId: string;
-  readonly email: string;
+  /** Only an email Privy verified. */
+  readonly email?: string;
   readonly expiresAt: number;
 }
 
@@ -86,9 +88,12 @@ export async function openSessionV1(
     );
     if (!claims || typeof claims !== "object") return null;
     const { u, e, x } = claims as Record<string, unknown>;
-    if (typeof u !== "string" || typeof e !== "string") return null;
+    if (typeof u !== "string") return null;
+    if (e !== undefined && typeof e !== "string") return null;
     if (typeof x !== "number" || x <= now()) return null;
-    return { userId: u, email: e, expiresAt: x };
+    return e === undefined
+      ? { userId: u, expiresAt: x }
+      : { userId: u, email: e, expiresAt: x };
   } catch {
     return null;
   }

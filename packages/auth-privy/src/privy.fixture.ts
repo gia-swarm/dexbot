@@ -1,9 +1,23 @@
 /** A stand-in Privy app for tests: a P-256 key pair and a token minter. */
 
+const seconds = (ms: number) => Math.floor(ms / 1000);
+
 export const TEST_APP_ID = "cm-test-app";
 export const TEST_NOW = Date.UTC(2026, 8, 27, 12, 0, 0);
 export const TEST_EMAIL = "person@example.com";
 export const TEST_DID = "did:privy:cm0123456789abcdef";
+export const TEST_DISCORD_ID = "80351110224678912";
+
+/** The Discord account every test person signs in with, in Privy's compact form. */
+export function discordAccount(overrides: Record<string, unknown> = {}) {
+  return {
+    type: "discord_oauth",
+    subject: TEST_DISCORD_ID,
+    username: "person",
+    lv: seconds(TEST_NOW) - 30,
+    ...overrides,
+  };
+}
 
 function base64Url(bytes: Uint8Array | string): string {
   const raw = typeof bytes === "string" ? new TextEncoder().encode(bytes) : bytes;
@@ -45,8 +59,6 @@ export async function testPrivyApp(): Promise<TestPrivyApp> {
   };
 }
 
-const seconds = (ms: number) => Math.floor(ms / 1000);
-
 /** Claims a real Privy access token carries. */
 export function accessClaims(overrides: Record<string, unknown> = {}) {
   return {
@@ -63,10 +75,7 @@ export function accessClaims(overrides: Record<string, unknown> = {}) {
 /** Claims a real Privy identity token carries, in its compact account form. */
 export function identityClaims(
   overrides: Record<string, unknown> = {},
-  accounts: unknown[] = [
-    { type: "wallet", address: "0xabc", chain_type: "ethereum", lv: seconds(TEST_NOW) - 30 },
-    { type: "email", address: TEST_EMAIL, lv: seconds(TEST_NOW) - 30 },
-  ],
+  accounts: unknown[] = [discordAccount()],
 ) {
   return {
     sub: TEST_DID,

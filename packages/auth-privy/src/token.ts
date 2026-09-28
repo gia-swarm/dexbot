@@ -7,10 +7,13 @@
  * - the **access token** says who the person is (`sub`, their Privy DID) and
  *   that their Privy session is live (`sid`). It carries no email.
  * - the **identity token** carries the same `sub` and `linked_accounts`, a
- *   JSON string of the accounts Privy has verified for them. An email account
- *   appears there only once its one-time code was entered, which is what makes
- *   its address a verified email. The app must have "Return user data in an
- *   identity token" turned on for Privy to issue one.
+ *   JSON string of the accounts Privy has linked to them. DexBot signs in with
+ *   Discord, so a Discord account must be among them. Privy leaves a Discord
+ *   account's email out of the token, and Discord doesn't promise it was
+ *   verified anyway, so the only email taken from here is a Privy email
+ *   account, which appears once its one-time code was entered. The app must
+ *   have "Return user data in an identity token" turned on for Privy to issue
+ *   one.
  *
  * Web Crypto does the verification, so the Package brings no JWT library into
  * the Worker.
@@ -158,19 +161,13 @@ export async function verifyPrivyAccessTokenV1(
 /** A verified Privy identity token's claims, reduced to what sign-in needs. */
 export interface PrivyIdentityClaimsV1 {
   readonly subject: string;
-  /** The email account Privy verified for this person. */
-  readonly email: string;
+  /** The Discord account this person signed in with. */
+  readonly discord: { readonly subject: string; readonly username?: string };
+  /** An email Privy verified with a one-time code, when they have one. */
+  readonly email?: string;
 }
 
-/**
- * The verified email in an identity token's `linked_accounts`, or a throw.
- *
- * Privy writes each account compactly: an email one is
- * `{ type: "email", address, lv }`, `lv` being when it was last verified
- * (`@privy-io/node` maps it to `verified_at`, which is also accepted). An
- * account without a verification time is not taken as verified.
- */
-function verifiedEmailOf(payload: Record<string, unknown>): string {
+function linkedAccountsOf(payload: Record<string, unknown>): Record<string, unknown>[] {
   if (typeof payload.linked_accounts !== "string") {
     throw new PrivyTokenError("token carries no linked accounts");
   }
@@ -183,18 +180,45 @@ function verifiedEmailOf(payload: Record<string, unknown>): string {
   if (!Array.isArray(accounts)) {
     throw new PrivyTokenError("token's linked accounts are not a list");
   }
-  for (const account of accounts as unknown[]) {
-    if (!account || typeof account !== "object") continue;
-    const { type, address, lv, verified_at } = account as Record<
-      string,
-      unknown
-    >;
-    if (type !== "email" || typeof address !== "string") continue;
-    if (typeof lv !== "number" && typeof verified_at !== "number") continue;
-    const email = address.trim();
+  return (accounts as unknown[]).filter(
+    (account): account is Record<string, unknown> =>
+      !!account && typeof account === "object",
+  );
+}
+
+/**
+ * Privy writes each account compactly, `lv` being when it was last verified
+ * (`@privy-io/node` maps it to `verified_at`, which is also accepted). An
+ * account without a verification time is not taken as verified.
+ */
+function verified(account: Record<string, unknown>): boolean {
+  return typeof account.lv === "number" || typeof account.verified_at === "number";
+}
+
+/** The Discord account, `{ type: "discord_oauth", subject, username, lv }`. */
+function discordOf(accounts: Record<string, unknown>[]): PrivyIdentityClaimsV1["discord"] {
+  for (const account of accounts) {
+    if (account.type !== "discord_oauth" || !verified(account)) continue;
+    if (typeof account.subject !== "string" || account.subject === "") continue;
+    return typeof account.username === "string" && account.username !== ""
+      ? { subject: account.subject, username: account.username }
+      : { subject: account.subject };
+  }
+  throw new PrivyTokenError("token carries no Discord account");
+}
+
+/**
+ * A Privy email account's address, `{ type: "email", address, lv }`. An email
+ * on an OAuth account never counts: the provider may not have verified it.
+ */
+function verifiedEmailOf(accounts: Record<string, unknown>[]): string | undefined {
+  for (const account of accounts) {
+    if (account.type !== "email" || typeof account.address !== "string") continue;
+    if (!verified(account)) continue;
+    const email = account.address.trim();
     if (/^[^\s@]+@[^\s@]+$/.test(email)) return email;
   }
-  throw new PrivyTokenError("token carries no verified email");
+  return undefined;
 }
 
 export async function verifyPrivyIdentityTokenV1(
@@ -202,5 +226,10 @@ export async function verifyPrivyIdentityTokenV1(
   options: PrivyVerificationV1,
 ): Promise<PrivyIdentityClaimsV1> {
   const payload = await verifyPrivyJwt(token, options);
-  return { subject: payload.sub, email: verifiedEmailOf(payload) };
+  const accounts = linkedAccountsOf(payload);
+  const discord = discordOf(accounts);
+  const email = verifiedEmailOf(accounts);
+  return email === undefined
+    ? { subject: payload.sub, discord }
+    : { subject: payload.sub, discord, email };
 }
