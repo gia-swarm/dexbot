@@ -19,7 +19,7 @@ A browser sign-in or Connect comes back to the iOS and macOS apps on a custom UR
 
 ## The pin
 
-`pubspec.yaml` depends on `frockbot_client` by git URL, path and a full commit SHA of FrockBot's `main`, because FrockBot has not tagged a release that carries the package yet. Move it to a release tag once one exists. The `webview_flutter_wkwebview` override comes from the same commit, and `pubspec.lock` starts from FrockBot's own lockfile so the transitive versions are the ones FrockBot tests.
+`pubspec.yaml` depends on `frockbot_client` by git URL, path and FrockBot's release tag `v0.7.291`, the same release every `@frockbot/*` npm package is pinned to; move them together. The `webview_flutter_wkwebview` override comes from the same tag, and `pubspec.lock` starts from FrockBot's own lockfile so the transitive versions are the ones FrockBot tests.
 
 ## Build
 
@@ -53,7 +53,8 @@ A standalone web build asks for the engine's fallback fonts under `fallback-font
 
 ## Not yet DexBot's
 
-- **Art.** Dex is a generated placeholder still with no Rive file, so the client draws the still everywhere and never loads the Rive runtime. The accent is a placeholder teal.
+- **Art.** Dex is a generated placeholder still with no Rive file, so the client draws the still everywhere and never loads the Rive runtime.
+- **Palette.** The app's own chrome uses FrockBot's built-in surfaces with DexFi's darker blue (#3674A5) as the accent, because a `ClientBrand` can name only an accent (gia-swarm/dexbot#8). Bot threads take DexFi's full palette from the server brand.
 - **Push.** There is no DexBot Firebase project. Without `android/app/google-services.json` or `ios/Runner/GoogleService-Info.plist` the app builds and runs with push off.
 - **Signing.** Android release builds use the debug key, and the Apple projects name no team.
 - **Development Apple builds.** FrockBot's Mac and iPhone projects can build a separate development app on `<scheme>-dev`. DexBot's projects carry no such variant, so a DexBot build with `FROCKBOT_IOS_DEV` or `FROCKBOT_DESKTOP_DEV` set would expect `dexbot-dev` returns that nothing registers.

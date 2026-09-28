@@ -5,7 +5,7 @@ publish_to: none
 version: 0.0.0+1
 
 # The SDK FrockBot's client requires; do not move it apart from the pinned
-# commit below, whose pubspec names the same one.
+# release below, whose pubspec names the same one.
 environment:
   sdk: ">=3.13.0 <3.14.0"
   flutter: "3.47.0"
@@ -13,19 +13,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  # FrockBot's client, run with DexBot's brand (ADR 0038 §4). ADR 0038 names a
-  # release tag; FrockBot has not tagged a release that carries the package
-  # yet (it landed in timoconnellaus/frockbot#910), so this pins the commit of
-  # FrockBot's `main` this app was built and tested against:
-  #   ec6532b0cd2ea6462deb52832e03d3bb19c95130 (2026-09-28, timoconnellaus/frockbot#919)
-  # A full SHA rather than `main` so a FrockBot merge never changes DexBot's
-  # build unseen. Move it to a release tag once one exists, and move the
-  # override below with it.
+  # FrockBot's client, run with DexBot's brand (ADR 0038 §4), at the release
+  # every @frockbot/* npm package is pinned to. Move it and the override below
+  # together with those.
   frockbot_client:
     git:
       url: https://github.com/timoconnellaus/frockbot.git
       path: apps/native/packages/frockbot_client
-      ref: ec6532b0cd2ea6462deb52832e03d3bb19c95130
+      ref: v0.7.291
 
 dev_dependencies:
   flutter_test:
@@ -43,9 +38,9 @@ flutter:
 
 dependency_overrides:
   # FrockBot's vendored WebKit adapter (a non-persistent website data store),
-  # carried as FrockBot's application carries it, from the same commit.
+  # carried as FrockBot's application carries it, from the same release.
   webview_flutter_wkwebview:
     git:
       url: https://github.com/timoconnellaus/frockbot.git
       path: apps/native/vendor/webview_flutter_wkwebview
-      ref: ec6532b0cd2ea6462deb52832e03d3bb19c95130
+      ref: v0.7.291

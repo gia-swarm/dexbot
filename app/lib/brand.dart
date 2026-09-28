@@ -3,8 +3,7 @@
 /// written here, so renaming the product is an edit to this file and to
 /// `identity.xcconfig`, which holds the platform ids and launcher label.
 ///
-/// Every value is a placeholder: the name until the product is named, and the
-/// one character until real art exists.
+/// The icon and the one character are placeholders until real art exists.
 library;
 
 import 'package:flutter/painting.dart';
@@ -21,16 +20,18 @@ const dexbotBrand = ClientBrand(
   // The server brand's `nativeScheme` must name the same one.
   // test/app_test.dart fails if any of them disagree.
   nativeScheme: 'dexbot',
-  // No `signInProvider`: DexBot signs in through Privy, whose own page offers
-  // the ways in, so the sign-in page says only "sign in".
+  // DexBot signs in with Discord only, through Privy.
+  signInProvider: 'Discord',
 
-  // A placeholder teal until DexBot has a palette. White type sits on `ink`
-  // and `paper`, so each keeps 4.5:1 against white.
+  // dexfi.com's blues. The client puts white type on `ink` and `paper`, which
+  // DexFi's main blue (#4D9EDC) can't carry at 4.5:1, so both are its darker
+  // hover blue until a brand can name the client's full looks
+  // (gia-swarm/dexbot#8). The server brand's looks are DexFi's own.
   accent: ClientAccent(
-    ink: Color(0xff0f7a5a),
-    paper: Color(0xff0c6b4f),
-    soft: Color(0xff8ff0c6),
-    deep: Color(0xff064d38),
+    ink: Color(0xff3674a5),
+    paper: Color(0xff3674a5),
+    soft: Color(0xff9ccbee),
+    deep: Color(0xff0d2338),
   ),
   // No release channel: a plain build, whose updaters stay inert. DexBot has
   // no Shorebird app and no Sparkle feed.

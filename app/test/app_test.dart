@@ -106,17 +106,17 @@ void main() {
     namesNeitherFrockBotNorGoogle();
   });
 
-  testWidgets('sign-in names no provider', (tester) async {
-    expect(dexbotBrand.signInProvider, isNull);
+  testWidgets('sign-in names Discord', (tester) async {
+    expect(dexbotBrand.signInProvider, 'Discord');
 
     await tester.pumpWidget(signIn());
-    expect(find.text('Continue to sign in'), findsOneWidget);
-    expect(find.textContaining('Secure sign-in.'), findsOneWidget);
+    expect(find.text('Continue with Discord'), findsOneWidget);
+    expect(find.textContaining('Secure sign-in with Discord.'), findsOneWidget);
     namesNeitherFrockBotNorGoogle();
 
     await tester.pumpWidget(signIn(awaitingBrowser: true));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Complete sign-in, then'), findsOneWidget);
+    expect(find.textContaining('Complete Discord sign-in, then'), findsOneWidget);
     namesNeitherFrockBotNorGoogle();
   });
 
